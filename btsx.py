@@ -6,8 +6,8 @@ import time
 
 log = logger.log
 
-
 class BTSX():
+    CNY_PRECISION = 10000.0
     USD_PRECISION = 10000.0
     BTSX_PRECISION = 100000.0
     
@@ -50,14 +50,15 @@ class BTSX():
             return False
         else:
             return response.json()
+
     def get_lowest_ask(self, asset1, asset2):
         response = self.request("blockchain_market_order_book", [asset1, asset2])
-        return response.json()["result"][0][0]
+        amount = float(response.json()["result"][0][0]["market_index"]["order_price"]["ratio"])
+        return amount 
         
     def get_balance(self, account, asset):
-        asset_id = 22
-        if asset == "BTSX":
-            asset_id = 0
+
+        asset_id = self.get_asset_id(asset) 
 
         response = self.request("wallet_account_balance", [account, asset])
         if not response.json():
@@ -69,10 +70,7 @@ class BTSX():
         for item in asset_array:
             if item[0] == asset_id:
                 amount = item[1]
-        if asset == "USD":
-            return amount / self.USD_PRECISION
-        if asset == "BTSX":
-            return amount / self.BTSX_PRECISION
+                return amount / self.get_precision(asset)
         log("UNKNOWN ASSET TYPE, CANT CONVERT PRECISION: %s" % asset)
         exit(1)
 
@@ -120,24 +118,20 @@ class BTSX():
     def cancel_all_orders(self, account, base, quote):
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
-        for pair in response.json()["result"]:
-            order_id = pair[0]
-            item = pair[1]
-            order_ids.append(order_id)
-        cancel_args = [[item] for item in order_ids]
-        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
-        return cancel_args
+        print response.json()
+        if "result" in response.json():
+           for item in response.json()["result"]:
+               order_ids.append(item["market_index"]["owner"])
+           cancel_args = [[item] for item in order_ids]
+           response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
+           return cancel_args
+        return
 
     def get_last_fill (self, base, quote):
         last_fill = -1
-        precision_ratio = 0
-        if base == "USD" and quote == "BTSX":
-            precision_ratio = 10
-        else:
-            raise Exception(" btsx.py  get_last_fill  -  I only know precision for usd and btsx")
-        response = self.request("blockchain_market_order_history", [base, quote, 0, 1])
+        response = self.request("blockchain_market_order_history", [quote, base, 0, 1])
         for order in response.json()["result"]:
-            last_fill = float(order["ask_price"]["ratio"]) * 10
+            last_fill = float(order["ask_price"]["ratio"]) 
         return last_fill
 
 
@@ -150,3 +144,12 @@ class BTSX():
             blocknum2 = response.json()["result"]["blockchain_head_block_num"]
             if blocknum2 != blocknum:
                 return
+
+    def get_precision(self, asset):
+        response = self.request("blockchain_get_asset", [asset])
+        return response.json()["result"]["precision"]
+
+    def get_asset_id(self, asset):
+        response = self.request("blockchain_get_asset", [asset])
+        return response.json()["result"]["id"]
+
