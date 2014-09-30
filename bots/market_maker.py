@@ -36,12 +36,23 @@ class MarketMaker():
             new_usd_per_btsx = median * MEDIAN_EDGE_MULTIPLE
 
         canceled = []
-        canceled.extend( self.client.get_asks_out_of_range(self.name, quote, base, new_usd_per_btsx * (1+spread), tolerance) )
-        canceled.extend( self.client.get_bids_less_than(self.name, quote, base, median) )
-        canceled.extend( self.client.get_bids_out_of_range(self.name, quote, base, new_usd_per_btsx, tolerance) )
+        quote_freed = 0
+        base_freed = 0
+        
+        result = self.client.get_asks_out_of_range(self.name, quote, base, new_usd_per_btsx * (1+spread), tolerance)
+        canceled.extend( result[0] )
+        base_freed += result[1]
+        
+        result = self.client.get_bids_less_than(self.name, quote, base, median)
+        canceled.extend( result[0] )
+        quote_freed += result[1]
+        
+        result = self.client.get_bids_out_of_range(self.name, quote, base, new_usd_per_btsx, tolerance)
+        canceled.extend( result[0] )
+        quote_freed += result[1]
 
-        usd_balance = self.client.get_balance(self.name, quote)
-        btsx_balance = self.client.get_balance(self.name, base)
+        usd_balance = self.client.get_balance(self.name, quote) + quote_freed
+        btsx_balance = self.client.get_balance(self.name, base) + base_freed
         available_btsx_balance = btsx_balance - min_balance
         available_usd_buy_quantity = (usd_balance / new_usd_per_btsx) - min_balance;
         
