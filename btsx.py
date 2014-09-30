@@ -112,7 +112,7 @@ class BTSX():
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "bid_order":
-                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
+                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > tolerance:
                     order_ids.append(order_id)
                     quote_shares += int(item["state"]["balance"])
                     log("%s canceled an order: %s" % (account, str(item)))
@@ -134,7 +134,7 @@ class BTSX():
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "ask_order":
-                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
+                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > tolerance:
                     order_ids.append(order_id)
                     base_shares += int(item["state"]["balance"])
         cancel_args = [item for item in order_ids]
