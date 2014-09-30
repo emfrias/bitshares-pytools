@@ -40,24 +40,26 @@ class MarketMaker():
         canceled.extend( self.client.cancel_bids_less_than(self.name, quote, base, median) )
         canceled.extend( self.client.cancel_bids_out_of_range(self.name, quote, base, new_usd_per_btsx, tolerance) )
 
-        if len(canceled) > 0:
-            self.log("canceled some orders, waiting...")
-            return # wait for a block if we canceled anything
-
         usd_balance = self.client.get_balance(self.name, quote)
         btsx_balance = self.client.get_balance(self.name, base)
         available_btsx_balance = btsx_balance - min_balance
         available_usd_buy_quantity = (usd_balance / new_usd_per_btsx) - min_balance;
+        
+        new_orders = []
 
         if available_usd_buy_quantity > min_order_size:
             self.log("Submitting a bid...")
-            self.client.submit_bid(self.name, available_usd_buy_quantity, base, new_usd_per_btsx, self.quote_symbol)
+            new_orders.append(["bid_order", [self.name, available_usd_buy_quantity, base, new_usd_per_btsx, self.quote_symbol]])
         else:
             self.log("Skipping bid - USD balance too low")
 
         if available_btsx_balance > min_order_size:
             self.log("submitting an ask...")
-            self.client.submit_ask(self.name, available_btsx_balance, base, new_usd_per_btsx * (1+spread), self.quote_symbol)
+            new_orders.append(["ask_order", [self.name, available_btsx_balance, base, new_usd_per_btsx * (1+spread), self.quote_symbol]])
         else:
             self.log("Skipping ask - BTSX balance too low")
+        
+        if len(canceled) > 0 or len(new_orders) > 0:
+            self.log("Committing orders.")
+            trx = self.client.request("wallet_market_batch_update", [canceled, new_orders], true)
 
