@@ -75,6 +75,11 @@ class BTSX():
         exit(1)
 
     def cancel_bids_less_than(self, account, base, quote, price):
+        cancel_args = self.get_bids_less_than(account, base, quote, price)
+        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
+        return cancel_args
+
+    def get_bids_less_than(self, account, base, quote, price):
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
         for pair in response.json()["result"]:
@@ -85,7 +90,6 @@ class BTSX():
                     order_ids.append(order_id)
                     log("%s canceled an order: %s" % (account, str(item)))
         cancel_args = [[item] for item in order_ids]
-        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
         return cancel_args
 
     def cancel_bids_out_of_range(self, account, base, quote, price, tolerance):
@@ -99,10 +103,28 @@ class BTSX():
                     order_ids.append(order_id)
                     log("%s canceled an order: %s" % (account, str(item)))
         cancel_args = [[item] for item in order_ids]
-        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
+        response = self.get_bids_out_of_range(account, base, quote, price, tolerance)
+        return cancel_args
+
+    def get_bids_out_of_range(self, account, base, quote, price, tolerance):
+        response = self.request("wallet_market_order_list", [base, quote, -1, account])
+        order_ids = []
+        for pair in response.json()["result"]:
+            order_id = pair[0]
+            item = pair[1]
+            if item["type"] == "bid_order":
+                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
+                    order_ids.append(order_id)
+                    log("%s canceled an order: %s" % (account, str(item)))
+        cancel_args = [[item] for item in order_ids]
         return cancel_args
 
     def cancel_asks_out_of_range(self, account, base, quote, price, tolerance):
+        cancel_args = self.get_asks_out_of_range(account, base, quote, price, tolerance)
+        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
+        return cancel_args
+
+    def get_asks_out_of_range(self, account, base, quote, price, tolerance):
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
         for pair in response.json()["result"]:
@@ -112,10 +134,14 @@ class BTSX():
                 if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
                     order_ids.append(order_id)
         cancel_args = [[item] for item in order_ids]
-        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
         return cancel_args
 
     def cancel_all_orders(self, account, base, quote):
+        cancel_args = self.get_all_orders(account, base, quote)
+        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
+        return cancel_args
+
+    def get_all_orders(self, account, base, quote):
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
         print response.json()
@@ -123,7 +149,6 @@ class BTSX():
            for item in response.json()["result"]:
                order_ids.append(item["market_index"]["owner"])
            cancel_args = [[item] for item in order_ids]
-           response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
            return cancel_args
         return
 
