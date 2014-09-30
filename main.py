@@ -36,7 +36,7 @@ bter = BterFeeds()
 btc38 = BTC38Feeds()
 feeds = {}
 feeds["bter_usd_per_btsx"] = Feed.from_func(bter.avg_usd_per_btsx)
-#feeds["btc38_usd_per_btsx"] = Feed.from_func(btc38.last_usd_per_btsx)
+feeds["btc38_usd_per_btsx"] = Feed.from_func(btc38.last_usd_per_btsx)
 feeds["usd_per_btsx"] = Average({k: feeds[k] for k in ["bter_usd_per_btsx"]})
 
 # fetch them all once to cache
