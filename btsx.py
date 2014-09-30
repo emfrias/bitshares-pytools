@@ -63,7 +63,9 @@ class BTSX():
         response = self.request("wallet_account_balance", [account, asset])
         if not response.json():
             log("Error in get_balance: %s", response["_content"]["message"])
-            return None
+            return 0
+        if "result" not in response.json() or response.json()["result"] == None:
+            return 0
 
         asset_array = response.json()["result"][0][1]
         amount = 0
@@ -71,8 +73,7 @@ class BTSX():
             if item[0] == asset_id:
                 amount = item[1]
                 return amount / self.get_precision(asset)
-        log("UNKNOWN ASSET TYPE, CANT CONVERT PRECISION: %s" % asset)
-        exit(1)
+        return 0
 
     def cancel_bids_less_than(self, account, base, quote, price):
         cancel_args = self.get_bids_less_than(account, base, quote, price)[0]
@@ -83,6 +84,8 @@ class BTSX():
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
         quote_shares = 0
+        if "result" not in response.json() or response.json()["result"] == None:
+            return [[], 0]
         for pair in response.json()["result"]:
             order_id = pair[0]
             item = pair[1]
@@ -91,7 +94,7 @@ class BTSX():
                     order_ids.append(order_id)
                     quote_shares += int(item["state"]["balance"])
                     log("%s canceled an order: %s" % (account, str(item)))
-        cancel_args = [[item] for item in order_ids]
+        cancel_args = [item for item in order_ids]
         return [cancel_args, float(quote_shares) / self.USD_PRECISION]
 
     def cancel_bids_out_of_range(self, account, base, quote, price, tolerance):
@@ -103,6 +106,8 @@ class BTSX():
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
         quote_shares = 0
+        if "result" not in response or response["result"] == None:
+           return [[], 0]
         for pair in response.json()["result"]:
             order_id = pair[0]
             item = pair[1]
@@ -111,7 +116,7 @@ class BTSX():
                     order_ids.append(order_id)
                     quote_shares += int(item["state"]["balance"])
                     log("%s canceled an order: %s" % (account, str(item)))
-        cancel_args = [[item] for item in order_ids]
+        cancel_args = [item for item in order_ids]
         return [cancel_args, float(quote_shares) / self.USD_PRECISION]
 
     def cancel_asks_out_of_range(self, account, base, quote, price, tolerance):
@@ -120,17 +125,19 @@ class BTSX():
         return cancel_args
 
     def get_asks_out_of_range(self, account, base, quote, price, tolerance):
-        response = self.request("wallet_market_order_list", [base, quote, -1, account])
+        response = self.request("wallet_market_order_list", [base, quote, -1, account]).json()
         order_ids = []
         base_shares = 0
-        for pair in response.json()["result"]:
+        if "result" not in response or response["result"] == None:
+           return [[], 0]
+        for pair in response["result"]:
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "ask_order":
                 if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
                     order_ids.append(order_id)
                     base_shares += int(item["state"]["balance"])
-        cancel_args = [[item] for item in order_ids]
+        cancel_args = [item for item in order_ids]
         return [cancel_args, base_shares / self.BTSX_PRECISION]
 
     def cancel_all_orders(self, account, base, quote):
@@ -145,7 +152,7 @@ class BTSX():
         if "result" in response.json():
            for item in response.json()["result"]:
                order_ids.append(item["market_index"]["owner"])
-           cancel_args = [[item] for item in order_ids]
+           cancel_args = [item for item in order_ids]
            return cancel_args
         return
 

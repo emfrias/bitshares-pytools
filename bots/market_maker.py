@@ -62,15 +62,17 @@ class MarketMaker():
             self.log("Submitting a bid...")
             new_orders.append(["bid_order", [self.name, available_usd_buy_quantity, base, new_usd_per_btsx, self.quote_symbol]])
         else:
-            self.log("Skipping bid - USD balance too low")
+            self.log("Skipping bid - %s balance of %d is too low" % (self.quote_symbol, available_usd_buy_quantity))
 
         if available_btsx_balance > min_order_size:
             self.log("submitting an ask...")
             new_orders.append(["ask_order", [self.name, available_btsx_balance, base, new_usd_per_btsx * (1+spread), self.quote_symbol]])
         else:
-            self.log("Skipping ask - BTSX balance too low")
+            self.log("Skipping ask - %s balance of %d is too low" % (self.base_symbol, available_btsx_balance))
         
         if len(canceled) > 0 or len(new_orders) > 0:
             self.log("Committing orders.")
-            trx = self.client.request("wallet_market_batch_update", [canceled, new_orders], true)
+            self.log([canceled, new_orders])
+            trx = self.client.request("wallet_market_batch_update", [canceled, new_orders, True]).json()
+            self.log(trx)
 
