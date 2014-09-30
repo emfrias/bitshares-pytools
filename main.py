@@ -36,8 +36,8 @@ bter = BterFeeds()
 btc38 = BTC38Feeds()
 feeds = {}
 feeds["bter_usd_per_btsx"] = Feed.from_func(bter.avg_usd_per_btsx)
-feeds["btc38_usd_per_btsx"] = Feed.from_func(btc38.last_usd_per_btsx)
-feeds["usd_per_btsx"] = Average({k: feeds[k] for k in ["bter_usd_per_btsx", "btc38_usd_per_btsx"]})
+#feeds["btc38_usd_per_btsx"] = Feed.from_func(btc38.last_usd_per_btsx)
+feeds["usd_per_btsx"] = Average({k: feeds[k] for k in ["bter_usd_per_btsx"]})
 
 # fetch them all once to cache
 for key, feed in feeds.iteritems():
@@ -49,10 +49,10 @@ for botconfig in conf["bots"]:
     bot_type = botconfig["bot_type"]
     if bot_type == "market_maker":
         bots.append(MarketMaker(client, feeds, botconfig, log))
-    if bot_type == "market_speculator":
+    elif bot_type == "market_speculator":
         bots.append(MarketSpeculator(client, feeds, botconfig, log))
     else:
-        raise Exception("unknown bot type")
+        raise Exception("unknown bot type: %s" % (bot_type))
 
 
 while True:
