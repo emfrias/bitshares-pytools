@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf8 sw=1 expandtab ft=python
 
+import os
 import sys
 from datetime import datetime
 import time
@@ -42,7 +43,7 @@ for botconfig in config["bots"]:
         ## FIXME this bot is not yet modified to with 'exchanges'
         #bots.append(MarketSpeculator(client, exchanges, botconfig, log))
     else:
-        raise Exception("unknown bot type")
+        raise Exception("unknown bot type: %s" % (bot_type))
 
 while True:
     for bot in bots:

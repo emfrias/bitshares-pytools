@@ -31,27 +31,40 @@ class MarketMaker():
             new_price_per_btsx = median * MEDIAN_EDGE_MULTIPLE
 
         canceled = []
-        canceled.extend( self.client.cancel_asks_out_of_range(self.name, quote, base, new_price_per_btsx * (1+spread), tolerance) )
-        canceled.extend( self.client.cancel_bids_less_than(self.name, quote, base, median) )
-        canceled.extend( self.client.cancel_bids_out_of_range(self.name, quote, base, new_price_per_btsx, tolerance) )
+        quote_freed = 0
+        base_freed = 0
+        
+        result = self.client.get_asks_out_of_range(self.name, quote, base, new_price_per_btsx * (1+spread), tolerance)
+        canceled.extend( result[0] )
+        base_freed += result[1]
+        
+        result = self.client.get_bids_less_than(self.name, quote, base, median)
+        canceled.extend( result[0] )
+        quote_freed += result[1]
+        
+        result = self.client.get_bids_out_of_range(self.name, quote, base, new_price_per_btsx, tolerance)
+        canceled.extend( result[0] )
+        quote_freed += result[1]
 
-        if len(canceled) > 0:
-            self.log.info("canceled some orders, waiting...")
-            return # wait for a block if we canceled anything
-
-        asset_balance                = self.client.get_balance(self.name, quote)
-        btsx_balance                 = self.client.get_balance(self.name, base)
-        available_btsx_balance       = btsx_balance - min_balance
+        asset_balance = self.client.get_balance(self.name, quote) + quote_freed
+        btsx_balance = self.client.get_balance(self.name, base) + base_freed
+        available_btsx_balance = btsx_balance - min_balance
         available_asset_buy_quantity = (asset_balance / new_price_per_btsx) - min_balance;
+        
+        new_orders = []
 
         if available_asset_buy_quantity > min_order_size:
-            self.log.info("Submitting a bid...")
-            #self.client.submit_bid(self.name, available_asset_buy_quantity, base, new_price_per_btsx, self.quote_symbol)
+            self.log("Submitting a bid...")
+            new_orders.append(["bid_order", [self.name, available_asset_buy_quantity, base, new_price_per_btsx, self.quote_symbol]])
         else:
-            self.log.info("Skipping bid - %s balance too low" % self.quote_symbol)
+            self.log("Skipping bid - %s balance of %d is too low" % (self.quote_symbol, available_asset_buy_quantity))
 
         if available_btsx_balance > min_order_size:
-            self.log.info("submitting an ask...")
-            #self.client.submit_ask(self.name, available_btsx_balance, base, new_price_per_btsx * (1+spread), self.quote_symbol)
+            self.log("submitting an ask...")
+            new_orders.append(["ask_order", [self.name, available_btsx_balance, base, new_price_per_btsx * (1+spread), self.quote_symbol]])
         else:
-            self.log.info("Skipping ask - BTSX balance too low")
+            self.log("Skipping ask - %s balance of %d is too low" % (self.base_symbol, available_btsx_balance))
+
+        if len(canceled) > 0 or len(new_orders) > 0:
+            self.log("Committing orders.")
+            trx = self.client.request("wallet_market_batch_update", [canceled, new_orders, True]).json()
