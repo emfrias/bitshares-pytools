@@ -41,8 +41,8 @@ for botconfig in config["bots"]:
         bots.append(MarketMaker(client, exchanges, botconfig, log))
     elif bot_type == "market_speculator":
         ## FIXME this bot is not yet modified to with 'exchanges'
-        #bots.append(MarketSpeculator(client, exchanges, botconfig, log))
-    else:
+        bots.append(MarketSpeculator(client, exchanges, botconfig, log))
+    else :
         raise Exception("unknown bot type: %s" % (bot_type))
 
 while True:
