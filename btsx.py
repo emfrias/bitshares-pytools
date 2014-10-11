@@ -1,10 +1,7 @@
-import urllib2
 import json
 import requests
-from mylog import logger
+import logging as log
 import time
-
-log = logger.log
 
 class BTSX():
     CNY_PRECISION = 10000.0
@@ -13,7 +10,7 @@ class BTSX():
     
     def __init__(self, user, password, port):
         self.url = "http://" + user + ":" + password + "@localhost:" + str(port) + "/rpc"
-        log("Initializing with URL:  " + self.url)
+        log.info("Initializing with URL:  " + self.url)
 
     def request(self, method, *args):
         payload = {
@@ -37,16 +34,16 @@ class BTSX():
     def submit_bid(self, account, amount, quote, price, base):
         response = self.request("bid", [account, amount, quote, price, base])
         if response.status_code != 200:
-            log("%s submitted a bid" % account)
-            log(response.json())
+            log.info("%s submitted a bid" % account)
+            log.info(response.json())
             return False
         else:
             return response.json()
     def submit_ask(self, account, amount, quote, price, base):
         response = self.request("ask", [account, amount, quote, price, base])
         if response.status_code != 200:
-            log("%s submitted an ask" % account())
-            log(response.json())
+            log.info("%s submitted an ask" % account())
+            log.info(response.json())
             return False
         else:
             return response.json()
@@ -62,7 +59,7 @@ class BTSX():
 
         response = self.request("wallet_account_balance", [account, asset])
         if not response.json():
-            log("Error in get_balance: %s", response["_content"]["message"])
+            log.info("Error in get_balance: %s", response["_content"]["message"])
             return None
 
         asset_array = response.json()["result"][0][1]
@@ -71,7 +68,7 @@ class BTSX():
             if item[0] == asset_id:
                 amount = item[1]
                 return amount / self.get_precision(asset)
-        log("UNKNOWN ASSET TYPE, CANT CONVERT PRECISION: %s" % asset)
+        log.info("UNKNOWN ASSET TYPE, CANT CONVERT PRECISION: %s" % asset)
         exit(1)
 
     def cancel_bids_less_than(self, account, base, quote, price):
@@ -83,7 +80,7 @@ class BTSX():
             if item["type"] == "bid_order":
                 if float(item["market_index"]["order_price"]["ratio"])* (self.BTSX_PRECISION / self.USD_PRECISION) < price:
                     order_ids.append(order_id)
-                    log("%s canceled an order: %s" % (account, str(item)))
+                    log.info("%s canceled an order: %s" % (account, str(item)))
         cancel_args = [[item] for item in order_ids]
         response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
         return cancel_args
@@ -97,7 +94,7 @@ class BTSX():
             if item["type"] == "bid_order":
                 if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / self.USD_PRECISION)) > price*tolerance:
                     order_ids.append(order_id)
-                    log("%s canceled an order: %s" % (account, str(item)))
+                    log.info("%s canceled an order: %s" % (account, str(item)))
         cancel_args = [[item] for item in order_ids]
         response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
         return cancel_args
@@ -118,7 +115,7 @@ class BTSX():
     def cancel_all_orders(self, account, base, quote):
         response = self.request("wallet_market_order_list", [base, quote, -1, account])
         order_ids = []
-        print response.json()
+        print(response.json())
         if "result" in response.json():
            for item in response.json()["result"]:
                order_ids.append(item["market_index"]["owner"])

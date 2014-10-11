@@ -39,7 +39,7 @@ def read_config(path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print "Usage:  python config.py new_config_path"
+        print("Usage:  python config.py new_config_path")
         sys.exit(1)
 
     path = sys.argv[1]
