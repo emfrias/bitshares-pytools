@@ -22,10 +22,6 @@ handler      = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes = con
 log.addHandler(handler)
 log.setLevel(logging.INFO)
 
-## Loading Exchanges
-exchanges = ex.Exchanges(log)
-exchanges.getAllPrices()
-
 ## Opening RPC to wallet
 client = BTSX(
     config["client"]["rpc_user"],
@@ -33,6 +29,10 @@ client = BTSX(
     config["client"]["rpc_host"],
     config["client"]["rpc_port"]
 )
+
+## Loading Exchanges
+exchanges = ex.Exchanges(log)
+exchanges.getAllPrices()
 
 ## Add Bots
 bots = []

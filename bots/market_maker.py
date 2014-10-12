@@ -10,8 +10,8 @@ class MarketMaker():
         self.exchanges    = exchanges
         self.config       = bot_config
         self.name         = self.config["account_name"]
-        self.quote_symbol = bot_config["asset_pair"][0]
-        self.base_symbol  = bot_config["asset_pair"][1]
+        self.quote_symbol = bot_config["asset_pair"][0] # USD
+        self.base_symbol  = bot_config["asset_pair"][1] # BTSX
 
     def execute(self):
         self.log.info("Executing bot:  %s" % self.name)
@@ -51,6 +51,11 @@ class MarketMaker():
         btsx_balance                 = self.client.get_balance(self.name, base) + base_freed
         available_btsx_balance       = btsx_balance - min_balance
         available_asset_buy_quantity = (asset_balance / new_price_per_btsx) - min_balance;
+
+        if len(canceled) > 0 :
+            self.log.info("Canceling orders: ")
+            self.log.info("- freeing up %.5f %s" % (quote_freed, quote))
+            self.log.info("- freeing up %.5f %s" % (base_freed, base))
         
         new_orders = []
 
@@ -65,6 +70,9 @@ class MarketMaker():
             new_orders.append(["ask_order", [self.name, available_btsx_balance, base, new_price_per_btsx * (1+spread), self.quote_symbol]])
         else :
             self.log.info("Skipping ask - %s balance of %.5f is too low" % (self.base_symbol, available_btsx_balance))
+
+        for o in new_orders :
+            self.log.info("new order %s: %s" % (o[0],o[1]))
 
         if len(canceled) > 0 or len(new_orders) > 0:
             self.log.info("Committing orders.")
