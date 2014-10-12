@@ -30,6 +30,7 @@ exchanges.getAllPrices()
 client = BTSX(
     config["client"]["rpc_user"],
     config["client"]["rpc_password"],
+    config["client"]["rpc_host"],
     config["client"]["rpc_port"]
 )
 

@@ -8,8 +8,8 @@ class BTSX():
     USD_PRECISION = 10000.0
     BTSX_PRECISION = 100000.0
     
-    def __init__(self, user, password, port):
-        self.url = "http://" + user + ":" + password + "@localhost:" + str(port) + "/rpc"
+    def __init__(self, user, password, host, port):
+        self.url = "http://" + user + ":" + password + "@"+host+":" + str(port) + "/rpc"
         log.info("Initializing with URL:  " + self.url)
 
     def request(self, method, *args):

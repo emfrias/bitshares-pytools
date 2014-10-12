@@ -25,6 +25,7 @@
         }
     ], 
     "client": {
+        "rpc_host": "localhost", 
         "rpc_password": "", 
         "rpc_user": "", 
         "rpc_port": ""
