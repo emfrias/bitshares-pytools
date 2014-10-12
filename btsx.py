@@ -4,8 +4,6 @@ import logging as log
 import time
 
 class BTSX():
-    BTSX_PRECISION = 100000.0
-    
     def __init__(self, user, password, host, port):
         self.url = "http://%s:%s@%s:%s/rpc" % (user,password,host,str(port))
         log.info("Initializing with URL:  " + self.url)
@@ -74,6 +72,7 @@ class BTSX():
 
     def get_bids_less_than(self, account, quote, base, price):
         quotePrecision = self.get_precision( quote )
+        basePrecision = self.get_precision( base )
         response = self.request("wallet_market_order_list", [quote, base, -1, account])
         order_ids = []
         quote_shares = 0
@@ -83,7 +82,7 @@ class BTSX():
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "bid_order":
-                if float(item["market_index"]["order_price"]["ratio"])* (self.BTSX_PRECISION / quotePrecision) < price:
+                if float(item["market_index"]["order_price"]["ratio"])* (basePrecision / quotePrecision) < price:
                     order_ids.append(order_id)
                     quote_shares += int(item["state"]["balance"])
                     log.info("%s canceled an order: %s" % (account, str(item)))
@@ -97,6 +96,7 @@ class BTSX():
 
     def get_bids_out_of_range(self, account, quote, base, price, tolerance):
         quotePrecision = self.get_precision( quote )
+        basePrecision = self.get_precision( base )
         response = self.request("wallet_market_order_list", [quote, base, -1, account])
         order_ids = []
         quote_shares = 0
@@ -106,7 +106,7 @@ class BTSX():
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "bid_order":
-                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / quotePrecision)) > tolerance:
+                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (basePrecision / quotePrecision)) > tolerance:
                     order_ids.append(order_id)
                     quote_shares += int(item["state"]["balance"])
                     log.info("%s canceled an order: %s" % (account, str(item)))
@@ -120,6 +120,7 @@ class BTSX():
 
     def get_asks_out_of_range(self, account, quote, base, price, tolerance):
         quotePrecision = self.get_precision( quote )
+        basePrecision = self.get_precision( base )
         response = self.request("wallet_market_order_list", [quote, base, -1, account]).json()
         order_ids = []
         base_shares = 0
@@ -129,11 +130,11 @@ class BTSX():
             order_id = pair[0]
             item = pair[1]
             if item["type"] == "ask_order":
-                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (self.BTSX_PRECISION / quotePrecision)) > tolerance:
+                if abs(price - float(item["market_index"]["order_price"]["ratio"]) * (basePrecision / quotePrecision)) > tolerance:
                     order_ids.append(order_id)
                     base_shares += int(item["state"]["balance"])
         cancel_args = [item for item in order_ids]
-        return [cancel_args, base_shares / self.BTSX_PRECISION]
+        return [cancel_args, base_shares / basePrecision]
 
     def cancel_all_orders(self, account, quote, base):
         cancel_args = self.get_all_orders(account, quote, base)
