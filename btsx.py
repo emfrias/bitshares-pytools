@@ -46,8 +46,14 @@ class BTSX():
 
     def get_lowest_ask(self, asset1, asset2):
         response = self.request("blockchain_market_order_book", [asset1, asset2])
+        amount = float(response.json()["result"][1][0]["market_index"]["order_price"]["ratio"])
+        return amount 
+
+    def get_lowest_bid(self, asset1, asset2):
+        response = self.request("blockchain_market_order_book", [asset1, asset2])
         amount = float(response.json()["result"][0][0]["market_index"]["order_price"]["ratio"])
         return amount 
+        
         
     def get_balance(self, account, asset):
         asset_id = self.get_asset_id(asset) 

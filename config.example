@@ -21,7 +21,10 @@
                 "USD",
                 "BTSX"
             ],
-            "min_balance": 100
+            "min_base_balance": 100,
+            "min_quote_balance": 100,
+            "beat_bid_by": 0,
+            "beat_ask_by": 0
         }
     ], 
     "client": {

@@ -8,6 +8,7 @@ import time
 from btsx import BTSX
 from config import read_config
 from bots import MarketMaker
+from bots import MarketSpeculator
 import exchanges as ex
 import logging
 import logging.handlers
@@ -33,6 +34,20 @@ client = BTSX(
 ## Loading Exchanges
 exchanges = ex.Exchanges(log)
 exchanges.getAllPrices()
+## Useful Variables from the exchanges object: ####################################################
+# exchange.lastupdate     : Last time the prices have been updated
+# exchange.assetprecision : precision of each asset as dict (capital letters asset)
+# exchange.volume_incny   : volume calculated in CNY of each asset as dict (capital letters asset)
+# exchange.volume_inusd   : volume calculated in USD of each asset as dict (capital letters asset)
+# exchange.volume_inbtc   : volume calculated in BTC of each asset as dict (capital letters asset)
+# exchange.volume_ineur   : volume calculated in EUR of each asset as dict (capital letters asset)
+# exchange.volume_inbtsx  : volume calculated in BTSX of each asset as dict (capital letters asset)
+# exchange.price_incny    : price of each asset (as dict) in CNY
+# exchange.price_inusd    : price of each asset (as dict) in USD
+# exchange.price_inbtc    : price of each asset (as dict) in BTC
+# exchange.price_ineur    : price of each asset (as dict) in EUR
+# exchange.price_inbtsx   : price of each asset (as dict) in BTSX
+###################################################################################################
 
 ## Add Bots
 bots = []
