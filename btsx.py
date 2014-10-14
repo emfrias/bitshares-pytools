@@ -144,7 +144,9 @@ class BTSX():
 
     def cancel_all_orders(self, account, quote, base):
         cancel_args = self.get_all_orders(account, quote, base)
-        response = self.request("batch", ["wallet_market_cancel_order", [cancel_args[0]] ])
+        #response = self.request("batch", ["wallet_market_cancel_order", [cancel_args[0]] ])
+        for i in cancel_args[0] :
+            response = self.request("wallet_market_cancel_order", [i])
         return cancel_args[1]
 
     def get_all_orders(self, account, quote, base):
