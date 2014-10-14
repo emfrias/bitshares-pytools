@@ -76,4 +76,4 @@ class MarketMaker():
 
         if len(canceled) > 0 or len(new_orders) > 0:
             self.log.info("Committing orders.")
-            #trx = self.client.request("wallet_market_batch_update", [canceled, new_orders, True]).json()
+            trx = self.client.request("wallet_market_batch_update", [canceled, new_orders, True]).json()

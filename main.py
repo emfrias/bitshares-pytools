@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # coding=utf8 sw=1 expandtab ft=python
 
-import os
 import sys
 from datetime import datetime
 import time
@@ -9,6 +8,7 @@ from btsx import BTSX
 from config import read_config
 from bots import MarketMaker
 from bots import MarketSpeculator
+from bots import MarketBalance
 import exchanges as ex
 import logging
 import logging.handlers
@@ -33,7 +33,6 @@ client = BTSX(
 
 ## Loading Exchanges
 exchanges = ex.Exchanges(log)
-exchanges.getAllPrices()
 ## Useful Variables from the exchanges object: ####################################################
 # exchange.lastupdate     : Last time the prices have been updated
 # exchange.assetprecision : precision of each asset as dict (capital letters asset)
@@ -52,19 +51,28 @@ exchanges.getAllPrices()
 ## Add Bots
 bots = []
 for botconfig in config["bots"]:
+    maxAgePriceSec = -1
     bot_type = botconfig["bot_type"]
     if bot_type == "market_maker":
         bots.append(MarketMaker(client, exchanges, botconfig, log))
+    elif bot_type == "market_balance":
+        bots.append(MarketBalance(client, exchanges, botconfig, log))
     elif bot_type == "market_speculator":
-        ## FIXME this bot is not yet modified to with 'exchanges'
         bots.append(MarketSpeculator(client, exchanges, botconfig, log))
     else :
         raise Exception("unknown bot type: %s" % (bot_type))
 
+    ## Need to enable external price fetching?
+    if "maxAgePriceSec" in botconfig :
+        maxAgePriceSec = min( [ maxAgePriceSec, botconfig[ "maxAgePriceSec" ] ] )
+
 while True:
+    ## Only load external prices if requires by any bot!
+    ## and update only every maxAgePriceSec seconds
+    if (datetime.utcnow()-exchanges.lastupdate).total_seconds() > maxAgePriceSec and maxAgePriceSec > 0:
+        log.info( "updating price from exchanges" )
+        exchanges.getAllPrices()
+
     for bot in bots:
         bot.execute()
     time.sleep(10)
-    if (datetime.utcnow()-exchanges.lastupdate).total_seconds() > config["maxAgePriceSec"] :
-        log.info( "updating price from exchanges" )
-        exchanges.getAllPrices()

@@ -34,7 +34,7 @@ class MarketSpeculator():
 
         # Some variavles
         SPREAD          = self.spread
-        BEAT_BID_BY     = self.beat_bid_by  # Requires get_lowest_bid() which isn't done yet
+        BEAT_BID_BY     = self.beat_bid_by
         BEAT_ASK_BY     = self.beat_ask_by
         base_precision  = self.client.get_precision(self.base_symbol)
         quote_precision = self.client.get_precision(self.quote_symbol)
@@ -49,35 +49,42 @@ class MarketSpeculator():
         lowest_ask  = self.client.get_lowest_ask(self.quote_symbol, self.base_symbol)
         lowest_ask  = lowest_ask * (base_precision / quote_precision)
 
+        #Get the ratio of the lowest ask price
+        highest_bid  = self.client.get_lowest_bid(self.quote_symbol, self.base_symbol)
+        highest_bid  = highest_bid * (base_precision / quote_precision)
+
         quote_balance = self.client.get_balance(self.name, self.quote_symbol) 
         base_balance = self.client.get_balance(self.name, self.base_symbol) 
 
-        #If the market has moved.
-        #if ((abs(self.last_ask - last_price) / last_price) > (SPREAD / 3)) and self.last_ask != 0 :
-           #self.client.cancel_all_orders(self.name, self.base_symbol, self.quote_symbol)
-           #self.client.wait_for_block() 
+        print( "median: %.8f" % median )
+        print( "lowest ask: %.8f ( median%+.3f%% )" % (lowest_ask, (lowest_ask-median)/median*100) )
+        print( "higest bid: %.8f ( median%+.3f%% )" % (highest_bid, (highest_bid-median)/median*100) )
 
-        #if ((abs(self.last_bid - last_price) / last_price) > (SPREAD / 3)) and self.last_bid != 0 :
-           #self.client.cancel_all_orders(self.name, self.base_symbol, self.quote_symbol)
-           #self.client.wait_for_block() 
+        # The market has moved?
+        canceled = []
+        if ((abs(self.last_ask - last_price) / last_price) > (SPREAD / 3)) and self.last_ask != 0 :
+           result = self.client.get_all_orders(self.name, self.base_symbol, self.quote_symbol)
+           canceled.extend( result[0] )
 
-        #bid just below the lowest ask 
+        if ((abs(self.last_bid - last_price) / last_price) > (SPREAD / 3)) and self.last_bid != 0 :
+           result = self.client.get_all_orders(self.name, self.base_symbol, self.quote_symbol)
+           canceled.extend( result[0] )
 
+        if ( len( canceled ) ) > 0 :
+           trx = self.client.request("wallet_market_batch_update", [canceled, [], True]).json()
+           self.client.wait_for_block() 
 
+        # bid just above the highest ask
         if quote_balance > self.min_quote_balance:
-           self.log.info("submitting bid for %f" % (lowest_ask * (1-(BEAT_ASK_BY*2))))
-           #self.client.submit_bid(self.name, ((quote_balance-self.min_quote_balance) / (lowest_ask *(1-(BEAT_ASK_BY*2)))), self.base_symbol, lowest_ask * (1-(BEAT_ASK_BY*2)) , self.quote_symbol)
-           self.last_bid = lowest_ask * (1-BEAT_ASK_BY*2)
+           self.log.info("submitting bid for %f" % (highest_bid * (1-(BEAT_ASK_BY*2))))
+           #self.client.submit_bid(self.name, ((quote_balance-self.min_quote_balance) / (highest_bid *(1-(BEAT_ASK_BY*2)))), self.base_symbol, highest_bid * (1-(BEAT_ASK_BY*2)) , self.quote_symbol)
+           self.last_bid = highest_bid * (1-BEAT_BID_BY*2)
            self.last_ask = 0
 
-
-        #For selling we just want to sell a few Larimers less to make sure we're the cheapest
-
+        # For selling we just want to sell a few Larimers less to make sure we're the cheapest
         if base_balance > self.min_base_balance:
            self.log.info("submitting ask for %f" %  (lowest_ask * (1-(BEAT_ASK_BY))))
            #self.client.submit_ask(self.name, base_balance-self.min_base_balance, self.base_symbol, lowest_ask * (1-BEAT_ASK_BY), self.quote_symbol)
            self.last_ask = lowest_ask * (1-BEAT_ASK_BY)
            self.last_bid = 0
-
-
 
