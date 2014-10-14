@@ -64,8 +64,9 @@ class MarketBalance():
             ask_amount_base = base_amount             * ((last_price*(SPREAD))/2.0) / ask_price
             bid_amount_base = quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price
 
-            if (quote_amount/base_amount) > ask_price or (quote_amount/base_amount) < bid_price  :
-                raise Exception( "Not balanced. Initial manual balance within spread required!" )
+            if (quote_amount/base_amount) > ask_price*2 or (quote_amount/base_amount) < bid_price/2  :
+                raise Exception( "Not balanced. Initial manual balance between %s and %s within spread required! Current ratio is %f<%f<%f"%\
+                               (self.quote_symbol,self.base_symbol, ask_price* ,(quote_amount/base_amount) ,bid_price/2) )
 
             self.log.info( "available: %15.8f %5s            and          %15.8f %5s" %( base_amount, self.base_symbol, quote_amount, self.quote_symbol ) )
             self.log.info( "buy:       %15.8f %5s for price %15.8f -- pay %15.8f %5s" %( bid_amount_base, self.base_symbol, bid_price, bid_amount_base*bid_price, self.quote_symbol ))
