@@ -33,7 +33,7 @@ class MarketBalance():
         open_orders = self.client.get_all_orders(self.name, self.quote_symbol, self.base_symbol)
 
         if len(open_orders[0])!=0 and len(open_orders[0])!=2: # no order available? all set to continue below!
-            self.log.info("Market has moved and order was executed! Canceling the other!")
+            self.log.info("%d open orders -> Market has moved and order was executed! Canceling the other!"%len(open_orders[0]))
             freed_base  = 0
             freed_quote = 0
             for o in open_orders[ 1 ] :
@@ -54,7 +54,7 @@ class MarketBalance():
             self.client.wait_for_block()
             # go back!
             return
-        else :
+        elif len(open_orders[0]) == 0 :
             ask_price       = last_price * (1 + SPREAD)
             bid_price       = last_price * (1 - SPREAD)
             #quote_amount    = (quote_balance + freed_base  - self.min_base_balance )
@@ -64,12 +64,14 @@ class MarketBalance():
             ask_amount_base = base_amount             * ((last_price*(SPREAD))/2.0) / ask_price
             bid_amount_base = quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price
 
-            if (quote_amount/base_amount) > ask_price or (quote_amount/base_amount) < bid_price  :
-                raise Exception( "Not balanced. Initial manual balance within spread required!" )
+            if (quote_amount/base_amount) > ask_price*2 or (quote_amount/base_amount) < bid_price/2  :
+                raise Exception( "Not balanced. Initial manual balance between %s and %s within spread required! Current ratio is %f<%f<%f"%\
+                               (self.quote_symbol,self.base_symbol, ask_price*2 ,(quote_amount/base_amount) ,bid_price/2) )
 
             self.log.info( "available: %15.8f %5s            and          %15.8f %5s" %( base_amount, self.base_symbol, quote_amount, self.quote_symbol ) )
             self.log.info( "buy:       %15.8f %5s for price %15.8f -- pay %15.8f %5s" %( bid_amount_base, self.base_symbol, bid_price, bid_amount_base*bid_price, self.quote_symbol ))
             self.log.info( "sell:      %15.8f %5s for price %15.8f -- get %15.8f %5s" %( ask_amount_base, self.base_symbol, ask_price, ask_amount_base*ask_price, self.quote_symbol ))
+            self.log.info( "submitting orders!" )
 
             new_orders = []
             #default (unlocked) >>> wallet_market_submit_bid bytemaster 20 XTS 1.1 USD        // buying 20 XTS @ 1.1 USD per XTS 
@@ -91,3 +93,6 @@ class MarketBalance():
             self.client.wait_for_block()
             self.client.wait_for_block()
             self.client.wait_for_block()
+        else :
+            # wait
+            return
