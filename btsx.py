@@ -144,18 +144,19 @@ class BTSX():
 
     def cancel_all_orders(self, account, quote, base):
         cancel_args = self.get_all_orders(account, quote, base)
-        response = self.request("batch", ["wallet_market_cancel_order", cancel_args])
-        return cancel_args
+        response = self.request("batch", ["wallet_market_cancel_order", [cancel_args[0]] ])
+        return cancel_args[1]
 
     def get_all_orders(self, account, quote, base):
         response = self.request("wallet_market_order_list", [quote, base, -1, account])
         order_ids = []
-        this.log.info(response.json())
+        orders = []
         if "result" in response.json():
            for item in response.json()["result"]:
-               order_ids.append(item["market_index"]["owner"])
-           cancel_args = [item for item in order_ids]
-           return cancel_args
+               order_ids.append(item[0])
+               orders.append(item[1])
+           orderids = [item for item in order_ids]
+           return [ orderids, orders ]
         return
 
     def get_last_fill (self, quote, base):
