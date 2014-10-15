@@ -2,6 +2,7 @@ import json
 import requests
 import logging as log
 import time
+import sys
 
 class BTSX():
     def __init__(self, user, password, host, port):
@@ -53,7 +54,6 @@ class BTSX():
         response = self.request("blockchain_market_order_book", [asset1, asset2])
         amount = float(response.json()["result"][0][0]["market_index"]["order_price"]["ratio"])
         return amount 
-        
         
     def get_balance(self, account, asset):
         asset_id = self.get_asset_id(asset) 
@@ -168,6 +168,48 @@ class BTSX():
             last_fill = float(order["ask_price"]["ratio"]) 
         return last_fill
 
+    def ask_at_market_price(self, name, amount, base, quote, confirm=False) :
+        last_fill      = -1
+        response       = self.request("blockchain_market_order_book", [quote, base])
+        quotePrecision = self.get_precision(quote)
+        basePrecision  = self.get_precision(base)
+        orders = []
+        for order in response.json()["result"][0]: # bid orders
+            order_amount = float(order["state"]["balance"]/quotePrecision)
+            order_price  = float(order["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision) 
+            if amount >= order_amount : # buy full bid
+              orders.append([name, order_amount, base, order_price, quote])
+              amount -= order_amount
+            elif amount < order_amount: # partial
+              orders.append([name, amount, base, order_price, quote])
+              break
+        for o in orders :
+            print( "Buying %12.8f %s for %12.8f" %(o[1], o[2], o[3]) )
+        orders = [ i for i in orders ]
+        if not confirm or self.query_yes_no( "I dare you confirm the orders above: ") :
+            return self.request("batch", ["ask", orders]).json()
+
+    def bid_at_market_price(self, name, amount, base, quote, confirm=False) :
+        last_fill      = -1
+        response       = self.request("blockchain_market_order_book", [quote, base])
+        quotePrecision = self.get_precision(quote)
+        basePrecision  = self.get_precision(base)
+        orders = []
+        for order in response.json()["result"][1]: # ask orders
+            order_amount = float(order["state"]["balance"]/quotePrecision)
+            order_price  = float(order["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision) 
+            if amount >= order_amount : # buy full bid
+              orders.append([name, order_amount, base, order_price, quote])
+              amount -= order_amount
+            elif amount < order_amount: # partial
+              orders.append([name, amount, base, order_price, quote])
+              break
+        for o in orders :
+            print( "Selling %12.8f %s for %12.8f" %(o[1], o[2], o[3]) )
+        orders = [ i for i in orders ]
+        if not confirm or self.query_yes_no( "I dare you confirm the orders above: ") :
+            return self.request("batch", ["bid", orders]).json()
+
     def wait_for_block(self):
         response = self.request("get_info", [])
         blocknum = response.json()["result"]["blockchain_head_block_num"]
@@ -185,3 +227,25 @@ class BTSX():
     def get_asset_id(self, asset):
         response = self.request("blockchain_get_asset", [asset])
         return response.json()["result"]["id"]
+
+    def query_yes_no(self, question, default="yes"):
+        valid = {"yes": True, "y": True, "ye": True,
+                 "no": False, "n": False}
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = input().lower()
+            if default is not None and choice == '':
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' "
+                                 "(or 'y' or 'n').\n")
