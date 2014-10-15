@@ -13,7 +13,7 @@ class MarketBalance():
         self.spread            = self.config["spread_percent"]
 
     def execute(self):
-        self.log.info("Executing bot:  %s" % self.name)
+        self.log.debug("Executing bot:  %s" % self.name)
 
         # Some variavles
         SPREAD          = self.spread

@@ -14,7 +14,7 @@ class MarketMaker():
         self.base_symbol  = bot_config["asset_pair"][1] # BTSX
 
     def execute(self):
-        self.log.info("Executing bot:  %s" % self.name)
+        self.log.debug("Executing bot:  %s" % self.name)
         tolerance      = self.config["external_price_tolerance"]
         spread         = self.config["spread_percent"]
         min_balance    = self.config["min_balance"]

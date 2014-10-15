@@ -30,7 +30,7 @@ class MarketSpeculator():
         self.last_ask = 0
 
     def execute(self):
-        self.log.info("Executing bot:  %s" % self.name)
+        self.log.debug("Executing bot:  %s" % self.name)
 
         # Some variavles
         SPREAD          = self.spread
