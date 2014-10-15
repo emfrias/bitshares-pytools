@@ -64,9 +64,20 @@ class MarketBalance():
             ask_amount_base = base_amount             * ((last_price*(SPREAD))/2.0) / ask_price
             bid_amount_base = quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price
 
+            ## Initial balancing ... buying at market rate! (thus asks for confirmation)
             if (quote_amount/base_amount) > ask_price*2 or (quote_amount/base_amount) < bid_price/2  :
-                raise Exception( "Not balanced. Initial manual balance between %s and %s within spread required! Current ratio is %f<%f<%f"%\
-                               (self.quote_symbol,self.base_symbol, ask_price*2 ,(quote_amount/base_amount) ,bid_price/2) )
+                print("Assets not balances. Setting orders to initially balance the amounts!")
+                if quote_balance < base_balance/last_price :
+                    ask_amount_base = (quote_balance*last_price+base_balance)/2.0
+                    print("Trying to sell %f %s at market price to balance account" % (ask_amount_base, self.base_symbol))
+                    self.client.ask_at_market_price(self.name, ask_amount_base, self.base_symbol, self.quote_symbol, True)
+                else :
+                    bid_amount_base = (quote_balance+base_balance/last_price)/2.0
+                    print("Trying to sell %f %s at market price to balance account" % (bid_amount_base, self.quote_symbol))
+                    self.client.bid_at_market_price(self.name, bid_amount_base, self.base_symbol, self.quote_symbol, True)
+                ## Wait for 2 blocks
+                self.client.wait_for_block()
+                self.client.wait_for_block()
 
             self.log.info( "available: %15.8f %5s            and          %15.8f %5s" %( base_amount, self.base_symbol, quote_amount, self.quote_symbol ) )
             self.log.info( "buy:       %15.8f %5s for price %15.8f -- pay %15.8f %5s" %( bid_amount_base, self.base_symbol, bid_price, bid_amount_base*bid_price, self.quote_symbol ))
@@ -74,25 +85,23 @@ class MarketBalance():
             self.log.info( "submitting orders!" )
 
             new_orders = []
-            #default (unlocked) >>> wallet_market_submit_bid bytemaster 20 XTS 1.1 USD        // buying 20 XTS @ 1.1 USD per XTS 
-            #self.log.info(            ["bid_order", [self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol]])
-            #new_orders.append(["bid_order", [self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol]])
-            self.client.submit_bid(           self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol)
-
-            # default (unlocked) >>> wallet_market_submit_ask bytemaster 20 XTS 1.1 USD        // selling 20 XTS @ 1.1 USD per XTS 
-            #self.log.info(            ["ask_order", [self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol]])
-            #new_orders.append(["ask_order", [self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol]])
-            self.client.submit_ask(           self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol)
-
-            #self.log.info("Committing orders.")
-            #trx = self.client.request("wallet_market_batch_update", [open_orders[0], new_orders, False]).json()
-            #self.log.info( trx )
+            self.client.submit_bid(self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol)
+            self.client.submit_ask(self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol)
 
             # Wait for 3 blocks just in case the client needs more time for
             # transmission! or a delegate misses its block
             self.client.wait_for_block()
             self.client.wait_for_block()
             self.client.wait_for_block()
+
+            ## Obsolete Code ###############
+            #default (unlocked) >>> wallet_market_submit_bid bytemaster 20 XTS 1.1 USD        // buying 20 XTS @ 1.1 USD per XTS 
+            # default (unlocked) >>> wallet_market_submit_ask bytemaster 20 XTS 1.1 USD        // selling 20 XTS @ 1.1 USD per XTS 
+            #self.log.info(            ["bid_order", [self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol]])
+            #self.log.info(            ["ask_order", [self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol]])
+            #new_orders.append(["ask_order", [self.name, ask_amount_base, self.base_symbol, ask_price, self.quote_symbol]])
+            #new_orders.append(["bid_order", [self.name, bid_amount_base, self.base_symbol, bid_price, self.quote_symbol]])
+            #trx = self.client.request("wallet_market_batch_update", [open_orders[0], new_orders, False]).json()
         else :
             # wait
             return
