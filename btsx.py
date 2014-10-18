@@ -28,6 +28,10 @@ class BTSX():
         feeds = response.json()["result"]
         return feeds[len(feeds)-1]["median_price"]
 
+    def get_centerprice(self, quote, base):
+        response = self.request("blockchain_market_status", [quote, base])
+        return response.json()["result"]["center_price"]
+
     def submit_bid(self, account, amount, quote, price, base):
         response = self.request("bid", [account, amount, quote, price, base])
         if response.status_code != 200:
@@ -175,16 +179,16 @@ class BTSX():
         basePrecision  = self.get_precision(base)
         orders = []
         for order in response.json()["result"][0]: # bid orders
-            order_amount = float(order["state"]["balance"]/quotePrecision)
             order_price  = float(order["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision) 
-            if amount >= order_amount : # buy full bid
+            order_amount = float(order["state"]["balance"]/quotePrecision) / order_price  # denoted in BASE
+            if amount >= order_amount : # buy full amount
               orders.append([name, order_amount, base, order_price, quote])
               amount -= order_amount
             elif amount < order_amount: # partial
               orders.append([name, amount, base, order_price, quote])
               break
         for o in orders :
-            print( "Buying %12.8f %s for %12.8f" %(o[1], o[2], o[3]) )
+            print( "Selling %15.8f %s for %12.8f %s @ %12.8f" %(o[1], o[2], o[1]*o[3], o[4], o[3]) )
         orders = [ i for i in orders ]
         if not confirm or self.query_yes_no( "I dare you confirm the orders above: ") :
             return self.request("batch", ["ask", orders]).json()
@@ -196,16 +200,16 @@ class BTSX():
         basePrecision  = self.get_precision(base)
         orders = []
         for order in response.json()["result"][1]: # ask orders
-            order_amount = float(order["state"]["balance"]/quotePrecision)
             order_price  = float(order["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision) 
-            if amount >= order_amount : # buy full bid
+            order_amount = float(order["state"]["balance"]/quotePrecision) / order_price  # denoted in BASE
+            if amount >= order_amount : # buy full amount
               orders.append([name, order_amount, base, order_price, quote])
               amount -= order_amount
             elif amount < order_amount: # partial
               orders.append([name, amount, base, order_price, quote])
               break
         for o in orders :
-            print( "Selling %12.8f %s for %12.8f" %(o[1], o[2], o[3]) )
+            print( "Buying %15.8f %s for %12.8f %s @ %12.8f" %(o[1], o[2], o[1]*o[3], o[4], o[3]) )
         orders = [ i for i in orders ]
         if not confirm or self.query_yes_no( "I dare you confirm the orders above: ") :
             return self.request("batch", ["bid", orders]).json()
