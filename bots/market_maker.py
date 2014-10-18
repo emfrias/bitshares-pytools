@@ -22,6 +22,13 @@ class MarketMaker():
         quote          = self.quote_symbol
         base           = self.base_symbol
 
+        ## Only load external prices if requires by the bot!
+        ## and update only every maxAgePriceSec seconds
+        maxAgePriceSec = self.config[ "maxAgePriceSec" ]
+        if (datetime.utcnow()-exchanges.lastupdate).total_seconds() > maxAgePriceSec :
+            log.info( "updating price from exchanges" )
+            exchanges.getAllPrices()
+
         # FIXME add weights
         true_price_per_btsx = statistics.median(self.exchanges.price_inbtsx[self.quote_symbol])
         median              = self.client.get_median(self.quote_symbol)

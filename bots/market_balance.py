@@ -32,6 +32,7 @@ class MarketBalance():
         # The market has moved?
         open_orders = self.client.get_all_orders(self.name, self.quote_symbol, self.base_symbol)
 
+        ## Inappropriate number of open orders - canceling all, freeing up funds
         if len(open_orders[0])!=0 and len(open_orders[0])!=2: # no order available? all set to continue below!
             self.log.info("%d open orders -> Market has moved and order was executed! Canceling the other!"%len(open_orders[0]))
             freed_base  = 0

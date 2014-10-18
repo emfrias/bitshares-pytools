@@ -31,8 +31,11 @@ client = BTSX(
     config["client"]["rpc_port"]
 )
 
-## Loading Exchanges
+## Loading Exchanges instance
 exchanges = ex.Exchanges(log)
+###################################################################################################
+#  NOTE: it's the responsibility of the bot to update the prices)
+#   exchanges.getAllPrices()
 ## Useful Variables from the exchanges object: ####################################################
 # exchange.lastupdate     : Last time the prices have been updated
 # exchange.assetprecision : precision of each asset as dict (capital letters asset)
@@ -62,17 +65,7 @@ for botconfig in config["bots"]:
     else :
         raise Exception("unknown bot type: %s" % (bot_type))
 
-    ## Need to enable external price fetching?
-    if "maxAgePriceSec" in botconfig :
-        maxAgePriceSec = min( [ maxAgePriceSec, botconfig[ "maxAgePriceSec" ] ] )
-
 while True:
-    ## Only load external prices if requires by any bot!
-    ## and update only every maxAgePriceSec seconds
-    if (datetime.utcnow()-exchanges.lastupdate).total_seconds() > maxAgePriceSec and maxAgePriceSec > 0:
-        log.info( "updating price from exchanges" )
-        exchanges.getAllPrices()
-
     for bot in bots:
         bot.execute()
     time.sleep(10)

@@ -228,6 +228,9 @@ class BTSX():
         response = self.request("blockchain_get_asset", [asset])
         return response.json()["result"]["id"]
 
+    def get_tx_history( self, name, asset ):
+        return self.request("history", [ name, asset ]).json()["result"]
+
     def query_yes_no(self, question, default="yes"):
         valid = {"yes": True, "y": True, "ye": True,
                  "no": False, "n": False}
