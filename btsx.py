@@ -43,7 +43,7 @@ class BTSX():
     def submit_ask(self, account, amount, quote, price, base):
         response = self.request("ask", [account, amount, quote, price, base])
         if response.status_code != 200:
-            log.info("%s submitted an ask" % account())
+            log.info("%s submitted an ask" % account)
             log.info(response.json())
             return False
         else:
