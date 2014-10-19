@@ -70,11 +70,11 @@ class MarketBalance():
                 feed_price = self.client.get_centerprice(self.quote_symbol, self.base_symbol)
                 print("Assets not balances. Setting orders to initially balance the amounts!")
                 if quote_balance/base_balance < feed_price : ## buy quote -> sell base
-                    ask_amount_base = (quote_balance*feed_price+base_balance)/2.0 - quote_balance*feed_price
+                    ask_amount_base = (quote_balance*feed_price+base_balance)/2.0
                     print("Trying to sell %f %s at market to balance account" % (ask_amount_base, self.base_symbol))
                     self.client.ask_at_market_price(self.name, ask_amount_base, self.base_symbol, self.quote_symbol, True)
                 else : ### sell quote -> buy base
-                    bid_amount_base = (quote_balance*feed_price+base_balance)/2.0 - base_balance
+                    bid_amount_base = (quote_balance*feed_price+base_balance)/2.0
                     print("Trying to buy %f %s at market to balance account" % (bid_amount_base, self.base_symbol))
                     self.client.bid_at_market_price(self.name, bid_amount_base, self.base_symbol, self.quote_symbol, True)
                 ## Wait for 3 blocks
