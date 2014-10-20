@@ -60,27 +60,30 @@ class MarketBalance():
             bid_price       = last_price * (1 - SPREAD)
             #quote_amount    = (quote_balance + freed_base  - self.min_base_balance )
             #base_amount     = (base_balance  + freed_quote - self.min_quote_balance)
-            quote_amount    = (quote_balance - self.min_base_balance )
-            base_amount     = (base_balance  - self.min_quote_balance)
-            ask_amount_base = base_amount             * ((last_price*(SPREAD))/2.0) / ask_price
-            bid_amount_base = quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price
+            quote_amount    = float(quote_balance - self.min_base_balance )
+            base_amount     = float(base_balance  - self.min_quote_balance)
+            ask_amount_base = float(base_amount             * ((last_price*(SPREAD))/2.0) / ask_price)
+            bid_amount_base = float(quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price)
+            feed_price      = float(self.client.get_centerprice(self.quote_symbol, self.base_symbol))
 
             ## Initial balancing ... buying at market rate! (thus asks for confirmation)
             if (quote_amount/base_amount) > ask_price*2 or (quote_amount/base_amount) < bid_price/2  :
-                feed_price = self.client.get_centerprice(self.quote_symbol, self.base_symbol)
-                print("Assets not balances. Setting orders to initially balance the amounts!")
+                print("Assets not balances.")
+                print("Balances: %20.5f %s and %20.5f %s -> ratio: %.5f (feed: %.5f)" % (quote_amount,self.quote_symbol,base_amount,self.base_symbol,(quote_amount/base_amount),feed_price))
+                print("Setting orders to balance the amounts!")
                 if quote_balance/base_balance < feed_price : ## buy quote -> sell base
-                    ask_amount_base = (quote_balance*feed_price+base_balance)/2.0
+                    ask_amount_base = (quote_balance*feed_price+base_balance)/2.0 - quote_balance*feed_price
                     print("Trying to sell %f %s at market to balance account" % (ask_amount_base, self.base_symbol))
                     self.client.ask_at_market_price(self.name, ask_amount_base, self.base_symbol, self.quote_symbol, True)
                 else : ### sell quote -> buy base
-                    bid_amount_base = (quote_balance*feed_price+base_balance)/2.0
+                    bid_amount_base = (quote_balance*feed_price+base_balance)/2.0 - base_balance
                     print("Trying to buy %f %s at market to balance account" % (bid_amount_base, self.base_symbol))
                     self.client.bid_at_market_price(self.name, bid_amount_base, self.base_symbol, self.quote_symbol, True)
                 ## Wait for 3 blocks
                 self.client.wait_for_block()
                 self.client.wait_for_block()
                 self.client.wait_for_block()
+                return
 
             self.log.info( "available: %15.8f %5s            and          %15.8f %5s" %( base_amount, self.base_symbol, quote_amount, self.quote_symbol ) )
             self.log.info( "buy:       %15.8f %5s for price %15.8f -- pay %15.8f %5s" %( bid_amount_base, self.base_symbol, bid_price, bid_amount_base*bid_price, self.quote_symbol ))
