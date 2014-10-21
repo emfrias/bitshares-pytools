@@ -21,6 +21,7 @@
             ],
             "min_base_balance": 10,
             "min_quote_balance": 10
+            "useExternalPrice": false
         },
         {
             "bot_type": "market_speculator",

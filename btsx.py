@@ -172,6 +172,15 @@ class BTSX():
             last_fill = float(order["ask_price"]["ratio"]) 
         return last_fill
 
+    def get_price(self, quote, base):
+        response = self.request("blockchain_market_order_book", [quote, base, 1])
+        order = response.json()["result"]
+        quotePrecision = self.get_precision(quote)
+        basePrecision  = self.get_precision(base)
+        lowest_bid  = float(order[0][0]["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision)
+        highest_ask = float(order[1][0]["market_index"]["order_price"]["ratio"])*(basePrecision / quotePrecision)
+        return (lowest_bid+highest_ask)/2
+
     def ask_at_market_price(self, name, amount, base, quote, confirm=False) :
         last_fill      = -1
         response       = self.request("blockchain_market_order_book", [quote, base])

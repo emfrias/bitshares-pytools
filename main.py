@@ -18,7 +18,7 @@ config = read_config(sys.argv[1])
 
 ## Setting up Logger
 LOG_FILENAME = "logs/%s" % (config["log"])
-log          = logging.getLogger('MarketMakerBot')
+log          = logging.getLogger('TradeBot')
 handler      = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes = config["logMaxByte"], backupCount = config["logBackupCnt"])
 log.addHandler(handler)
 log.setLevel(logging.INFO)

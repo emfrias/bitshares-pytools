@@ -34,16 +34,22 @@ class Exchanges() :
          self.assetprecision["BTSX"]  = 1e5
 
          for asset in self.assets + ["BTSX"]: 
-             self.price_inbtsx[ asset ]         = []
-             self.price_ineur[ asset ]          = []
-             self.price_inusd[ asset ]          = []
-             self.price_inbtc[ asset ]          = []
-             self.price_incny[ asset ]          = []
-             self.volume_ineur[ asset ]         = []
-             self.volume_inusd[ asset ]         = []
-             self.volume_inbtc[ asset ]         = []
-             self.volume_incny[ asset ]         = []
-             self.volume_inbtsx[ asset ]        = []
+             self.price_inbtsx[asset]         = []
+             self.price_ineur[asset]          = []
+             self.price_inusd[asset]          = []
+             self.price_inbtc[asset]          = []
+             self.price_incny[asset]          = []
+             self.volume_ineur[asset]         = []
+             self.volume_inusd[asset]         = []
+             self.volume_inbtc[asset]         = []
+             self.volume_incny[asset]         = []
+             self.volume_inbtsx[asset]        = []
+
+         self.price_inbtsx["BTSX"].append(1.0)
+         self.price_ineur["EUR"].append(1.0)
+         self.price_inusd["USD"].append(1.0)
+         self.price_inbtc["BTC"].append(1.0)
+         self.price_incny["CNY"].append(1.0)
 
     ## ----------------------------------------------------------------------------
     ## Fetch data
@@ -112,6 +118,7 @@ class Exchanges() :
        availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
       except:
        self.log.error("Error fetching results from poloniex!")
+
       for coin in availableAssets :
        self.price_inbtc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
        self.volume_inbtc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"]))
@@ -125,6 +132,7 @@ class Exchanges() :
        result = response.json()["result"]
       except:
        self.log.error("Error fetching results from bitrex!")
+
       for coin in result :
        if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
         mObj    = re.match( 'BTC-(.*)', coin[ "MarketName" ] )
@@ -161,7 +169,7 @@ class Exchanges() :
        for i,a in enumerate(availableAssets,1) :
         self.price_ineur[ self.bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
       except: 
-       self.log.error("Error fetching results from btc38!")
+       self.log.error("Error fetching results from yahoo!")
        return
 
     ## ----------------------------------------------------------------------------

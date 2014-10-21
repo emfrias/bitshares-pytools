@@ -1,5 +1,4 @@
-## This is a very simple asset agnostic bot based on the Market Maker bot for
-
+import statistics
 class MarketBalance():
     def __init__(self, client, exchanges, bot_config, log):
         self.log               = log
@@ -11,6 +10,7 @@ class MarketBalance():
         self.min_base_balance  = self.config["min_base_balance"]
         self.min_quote_balance = self.config["min_quote_balance"]
         self.spread            = self.config["spread_percent"]
+        self.exchanges         = exchanges
 
     def execute(self):
         self.log.debug("Executing bot:  %s" % self.name)
@@ -20,10 +20,6 @@ class MarketBalance():
         base_precision  = self.client.get_precision(self.base_symbol)
         quote_precision = self.client.get_precision(self.quote_symbol)
         median          = self.client.get_median(self.quote_symbol)
-
-        # Get the ratio of the last filled order
-        last_price = self.client.get_last_fill(self.quote_symbol, self.base_symbol)
-        last_price = last_price * (base_precision / quote_precision)
 
         # Get balances
         quote_balance = self.client.get_balance(self.name, self.quote_symbol) 
@@ -56,6 +52,15 @@ class MarketBalance():
             # go back!
             return
         elif len(open_orders[0]) == 0 :
+            if self.config["useExternalPrice"] :
+                ## Get fresh prices from exchanges!
+                exchanges.getAllPrices()
+                base_per_btsx  = statistics.median(self.exchanges.price_inbtsx[self.quote_symbol])
+                quote_per_btsx = statistics.median(self.exchanges.price_inbtsx[self.base_symbol])
+                last_price     = base_per_btsx / quote_per_btsx
+            else :
+                last_price = self.client.get_price(self.quote_symbol, self.base_symbol)
+
             ask_price       = last_price * (1 + SPREAD)
             bid_price       = last_price * (1 - SPREAD)
             #quote_amount    = (quote_balance + freed_base  - self.min_base_balance )
