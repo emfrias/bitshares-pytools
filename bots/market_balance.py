@@ -69,7 +69,7 @@ class MarketBalance():
             base_amount     = float(base_balance  - self.min_quote_balance)
             ask_amount_base = float(base_amount             * ((last_price*(SPREAD))/2.0) / ask_price)
             bid_amount_base = float(quote_amount/bid_price  * ((last_price*(SPREAD))/2.0) / bid_price)
-            feed_price      = float(self.client.get_centerprice(self.quote_symbol, self.base_symbol))
+            feed_price      = float(self.client.get_centerprice(self.quote_symbol, self.base_symbol)* (base_precision/quote_precision))
 
             ## Initial balancing ... buying at market rate! (thus asks for confirmation)
             if (quote_amount/base_amount) > ask_price*2 or (quote_amount/base_amount) < bid_price/2  :

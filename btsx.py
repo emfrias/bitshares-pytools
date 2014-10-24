@@ -30,7 +30,7 @@ class BTSX():
 
     def get_centerprice(self, quote, base):
         response = self.request("blockchain_market_status", [quote, base])
-        return response.json()["result"]["center_price"]
+        return float(response.json()["result"]["center_price"]["ratio"])
 
     def submit_bid(self, account, amount, quote, price, base):
         response = self.request("bid", [account, amount, quote, price, base])
