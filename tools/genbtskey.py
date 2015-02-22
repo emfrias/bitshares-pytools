@@ -58,7 +58,7 @@ def base58CheckEncode(version, payload):
     return base58encode(result)
 
 def base58CheckDecode(s):
-    s = base58decode(s)
+    s   = base58decode(s)
     dec = s[:-4]
     checksum = hashlib.sha256(hashlib.sha256(dec).digest()).digest()[:4]
     assert(s[-4:] == checksum)
