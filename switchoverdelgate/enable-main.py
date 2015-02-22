@@ -16,7 +16,7 @@ def enable( ) :
     rpc2.wallet_open("delegate")
     rpc2.wallet_delegate_set_block_production("ALL","true")
     rpc2.unlock(999999, config.mainunlock)
-    rpc2.setnetwork(25,30)
+    #rpc2.setnetwork(25,30)
 
     print "disabling main block production"
     rpc.wallet_open("delegate")
