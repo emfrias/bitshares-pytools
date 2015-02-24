@@ -97,14 +97,19 @@ class WithdrawSignatureType(object) :
         return vars(self)
 
 class WithdrawCondition(object) :
+    def ZigZagEncode(self,value):
+        if value >= 0:
+            return value << 1
+        return (value << 1) ^ (~0)
+
     def __init__( self, asset_id, slate_id, condition_type, condition ) :
         self.asset_id = asset_id
         self.slate_id = slate_id
         self.type = condition_type
         self.data = condition
     def towire(self) :
-        wire  = varint(self.asset_id)
-        wire += struct.pack("<Q",self.slate_id) 
+        wire  = varint(self.ZigZagEncode(self.asset_id)) # boa .. really?
+        wire += struct.pack("<Q",int(self.slate_id) if self.slate_id else 0) 
         wire += struct.pack("<B",bts_withdraw[self.type]) 
         wire += variable_buffer(self.data.towire())
         return wire
@@ -123,6 +128,7 @@ class Deposit(object) :
         return wire
     def tojson(self) :
         d = vars(copy(self))
+        d["amount"] = str(self.amount)
         d["condition"] = self.condition.tojson()
         return d
 
@@ -137,7 +143,9 @@ class Withdraw(object) :
         wire += variable_buffer(self.claim_input_data)
         return wire
     def tojson(self) :
-        return vars(self)
+        d = vars(copy(self))
+        d["amount"] = str(self.amount)
+        return d
 
 class Operation(object) :
     def __init__( self, optype, operation ) :
@@ -158,15 +166,15 @@ class Transaction(object) :
         self.slate_id = slate_id
         self.operations = operations
     def towire(self) :
-        wire  = struct.pack("<I",self.expiration)  ## expiration time
-        wire += struct.pack("<B",self.slate_id)         ## true/false slate_id
+        wire  = struct.pack("<I",self.expiration )  ## expiration time #!!!!!!
+        wire += struct.pack("<B",int(self.slate_id) if self.slate_id else 0)    ## true/false slate_id
         wire += varint(len(self.operations))
         for op in self.operations :
             wire += op.towire()
         return wire
     def tojson(self) :
         d = vars(copy(self))
-        d["expiration"] = datetime.datetime.fromtimestamp(int(d["expiration"])).strftime('%Y-%m-%dT%H:%M:%S')
+        d["expiration"] = datetime.datetime.utcfromtimestamp(int(d["expiration"])).strftime('%Y-%m-%dT%H:%M:%S')
         d["operations"] = []
         for op in self.operations :
             d["operations"].append(op.tojson())
@@ -215,41 +223,50 @@ class SignedTransaction(object) :
         # 1.6 Compute Q = r^-1(sR - eG)
         Q = ecdsa.numbertheory.inverse_mod(r, order) * (s * R + (-e % order) * G)
         # Not strictly necessary, but let's verify the message for paranoia's sake.
-        #if ecdsa.VerifyingKey.from_public_point(Q, curve=ecdsa.SECP256k1).verify_digest(signature, digest, sigdecode=ecdsa.util.sigdecode_string) != True:
-        #    return None
-        #return Q
+        if ecdsa.VerifyingKey.from_public_point(Q, curve=ecdsa.SECP256k1).verify_digest(signature, digest, sigdecode=ecdsa.util.sigdecode_string) != True:
+            return None
         return ecdsa.VerifyingKey.from_public_point(Q, curve=ecdsa.SECP256k1)
 
     def __init__( self, transaction, privatekeys ) :
         self.transaction = transaction
-        self.privkeys = privatekeys
+        ## Unique private keys
+        self.privkeys = []
+        [self.privkeys.append(item) for item in privatekeys if item not in self.privkeys]
+        #self.privkeys = privatekeys
         self.chainid  = chainid
-        self.message  = str(transaction.towire()) + str(binascii.unhexlify(chainid))
-        self.digest   = hashlib.sha256( self.message ).digest()
+        self.message  = transaction.towire() + binascii.unhexlify(chainid)
+        self.digest   = hashlib.sha256(self.message).digest()
         self.signatures = self.signtx()
 
     def signtx(self) :
         sigs = []
         for wif in self.privkeys :
-            p         = btskey.wifKeyToPrivateKey(wif).decode('hex')
-            sk        = ecdsa.SigningKey.from_string(p, curve=ecdsa.SECP256k1)
-            sigder    = sk.sign_deterministic(self.message, hashfunc=hashlib.sha256,sigencode=ecdsa.util.sigencode_der)
-            hexSig    = self.derSigToHexSig(binascii.hexlify(sigder))  # DER decode
-            signature = binascii.unhexlify(hexSig)
-            ## Recovery parameter
-            r, s      = ecdsa.util.sigdecode_string(signature, ecdsa.SECP256k1.order)
-            assert sk.get_verifying_key().verify(signature, self.message, hashfunc=hashlib.sha256) ## verify valid pubkey
-            assert ecdsa.curves.orderlen( r ) == 32 ## Verify length or r and s
-            assert ecdsa.curves.orderlen( s ) == 32 ## Verify length or r and s
-            i = self.recoverPubkeyParameter(self.digest, signature, sk.get_verifying_key())
-            i += 4 #compressed
-            i += 27 #compact
-            sigs.append(struct.pack("<B",i) + signature)
+            p     = btskey.wifKeyToPrivateKey(wif).decode('hex')
+            sk    = ecdsa.SigningKey.from_string(p, curve=ecdsa.SECP256k1)
+            cnt   = 0
+            while 1 :
+                cnt += 1
+                assert cnt<10, "Something wired happend while signing the transaction"
+                ## Sign message
+                k         = ecdsa.rfc6979.generate_k(sk.curve.generator.order(), sk.privkey.secret_multiplier, hashlib.sha256, self.digest+str(cnt))
+                sigder    = sk.sign_digest(self.digest, sigencode=ecdsa.util.sigencode_der, k=k)
+                hexSig    = self.derSigToHexSig(binascii.hexlify(sigder))  # DER decode
+                signature = binascii.unhexlify(hexSig)
+                ## Recovery parameter
+                r, s      = ecdsa.util.sigdecode_string(signature, ecdsa.SECP256k1.order)
+                if ecdsa.curves.orderlen( r ) is 32 or ecdsa.curves.orderlen( s ) is 32 : ## Verify length or r and s
+                    i = self.recoverPubkeyParameter(self.digest, signature, sk.get_verifying_key())
+                    i += 4 #compressed
+                    i += 27 #compact
+                    break
+            sigstr = struct.pack("<B",i)
+            sigstr += signature
+            sigs.append( sigstr )
         return sigs
 
     def towire(self) :
         wire = self.transaction.towire()
-        wire += varint( len( self.signatures ) )                # number of signatures
+        wire += varint(len(self.signatures))
         for s in self.signatures :
             wire += s
         return wire
