@@ -12,20 +12,20 @@ print("# Reading accounts")
 accounts = rpc.wallet_list_my_accounts()["result"]
 
 #########################################
-#print("\n\n## setting new active keys")
-#for account in accounts :
-# print("- %20s" % account["name"])
-# try :
-#  rpc.wallet_account_update_active_key(account["name"], config.payee)
-# except :
-#  print("Error changing active key for %s. Probably not able to pay. Please fund account." % account["name"])
-#  continue
-#
-#########################################
-#print("\n\n## waiting two blocks to confirm")
-#rpc.wait_for_block()
-#rpc.wait_for_block()
-#
+print("\n\n## setting new active keys")
+for account in accounts :
+ print("- %20s" % account["name"])
+ try :
+  rpc.wallet_account_update_active_key(account["name"], config.payee)
+ except :
+  print("Error changing active key for %s. Probably not able to pay. Please fund account." % account["name"])
+  continue
+
+########################################
+print("\n\n## waiting two blocks to confirm")
+rpc.wait_for_block()
+rpc.wait_for_block()
+
 ########################################
 print("\n\n## moving funds to new active keys")
 for account in accounts :
