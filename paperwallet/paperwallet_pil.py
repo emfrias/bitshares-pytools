@@ -1,10 +1,14 @@
+#!/usr/bin/env python2
+import binascii
+from pprint import pprint
+import json
+import sys
+import csv
 from PIL import Image
 from PIL import ImageFont, ImageDraw
 import qrcode
-import csv
 
-amount_text = "1 USD"
-
+print( "Constructing paper wallets" )
 ## QR codes
 wif_topleft        =  ( 25  , 306 ) 
 wif_size           =  ( 180 , 180 ) 
@@ -17,11 +21,12 @@ addt_bottomright   =  ( 688 , 488 )
 amount_topleft     =  ( 762 , 26  ) 
 amount_bottomright =  ( 974 , 69  ) 
 
+amount_text = "$50c"
+
 with open('wallet.csv', 'r') as csvfile:
     spamwriter = csv.reader(csvfile, delimiter=';')
     cnt = 0
     for wif,add in spamwriter :
-        cnt+=1
         img  = Image.open('paperfront.png', 'r')
         draw = ImageDraw.Draw(img)
 
@@ -44,4 +49,7 @@ with open('wallet.csv', 'r') as csvfile:
         img.paste( qrcode.make(add).resize(wif_size), wif_topleft )
 
         #img.show()
+        cnt+=1
         img.save("paperwallet-%03d.png"%cnt, "PNG")
+
+print( "Done." )

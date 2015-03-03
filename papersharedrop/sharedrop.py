@@ -8,9 +8,6 @@ import bitsharestools.address as Address
 import bitsharestools.transactions as Transaction
 import bitsharesrpc
 import csv
-from PIL import Image
-from PIL import ImageFont, ImageDraw
-import qrcode
 
 ################################################################################
 def query_yes_no(question, default="yes"):
@@ -97,47 +94,5 @@ print( json.dumps( sigtx.tojson(), indent=4 ) )
 if query_yes_no( "Please confirm the transaction" ) :
     print( "Transmitting!!" )
     #print(rpc.blockchain_broadcast_transaction(sigtx.tojson()))
-
-
-print( "Constructing paper wallets" )
-## QR codes
-wif_topleft        =  ( 25  , 306 ) 
-wif_size           =  ( 180 , 180 ) 
-addr_topleft       =  ( 998 , 27  ) 
-addr_size          =  ( 180 , 180 ) 
-
-## Text
-addt_topleft       =  ( 227 , 445 ) 
-addt_bottomright   =  ( 688 , 488 ) 
-amount_topleft     =  ( 762 , 26  ) 
-amount_bottomright =  ( 974 , 69  ) 
-
-amount_text = "%.2f %s" % ( amount, sharedropsymbol )
-
-cnt = 0
-for wif in wifs :
-    add = Address.wif2btsaddr(wif)
-    img  = Image.open('paperfront.png', 'r')
-    draw = ImageDraw.Draw(img)
-
-    ## Address
-    w,h = draw.textsize(add)
-    x1 = int((addt_topleft[0]+addt_bottomright[0])/2.0 - w/2.0)
-    y1 = int((addt_topleft[1]+addt_bottomright[1])/2.0 - h/2.0)
-    draw.text(( x1, y1 ), add, fill=( 0,0,0,0 ))
-
-    ## amount
-    w,h = draw.textsize(amount_text)
-    x1 = int((amount_topleft[0]+amount_bottomright[0])/2.0 - w/2.0)
-    y1 = int((amount_topleft[1]+amount_bottomright[1])/2.0 - h/2.0)
-    draw.text(( x1, y1 ), amount_text, fill=( 0,0,0,0 ))
-
-    ## QR codes
-    img.paste( qrcode.make(wif).resize(addr_size), addr_topleft )
-    img.paste( qrcode.make(add).resize(wif_size), wif_topleft )
-
-    #img.show()
-    cnt+=1
-    img.save("paperwallet-%03d.png"%cnt, "PNG")
-
-print( "Done." )
+else :
+    print("blockchain_broadcast_transaction " + sigtx.tojson())

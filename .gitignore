@@ -1,5 +1,5 @@
 config.py
 *.pyc
 delegate-payouts-charity
-paperwallet*.png
+paperwallet/paperwallets/*.svg
 wallet.csv
