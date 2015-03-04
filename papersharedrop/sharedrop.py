@@ -86,7 +86,7 @@ print( "Storing WIF and ADDRESS in wallet.csv backup" )
 with open('wallet.csv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';')
     for wif in wifs :
-        spamwriter.writerow([wif, Address.wif2btsaddr(wif)])
+        spamwriter.writerow([wif, Address.wif2btsaddr(wif), "%f %s" %(amount,sharedropsymbol), sharedropsymbol])
 
 ## Send operation
 print( "Broadcasting transaction to the blockchain" )
@@ -95,4 +95,4 @@ if query_yes_no( "Please confirm the transaction" ) :
     print( "Transmitting!!" )
     #print(rpc.blockchain_broadcast_transaction(sigtx.tojson()))
 else :
-    print("blockchain_broadcast_transaction " + sigtx.tojson())
+    print("blockchain_broadcast_transaction " + str(sigtx.tojson()).replace(' ',''))
