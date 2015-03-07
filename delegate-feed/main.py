@@ -194,7 +194,7 @@ def fetch_from_bittrex():
      volume_in_btc[ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
-  #try :
+  try :
    availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
    ## USD/X
    yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
@@ -220,8 +220,8 @@ def fetch_from_yahoo():
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
-  #except:
-  # sys.exit("Warning: unknown error - yahoo")
+  except:
+   sys.exit("Warning: unknown error - yahoo")
 
 ## ----------------------------------------------------------------------------
 ## GOLD=XAU  SILVER=XAG
