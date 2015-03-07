@@ -1,3 +1,6 @@
 [submodule "python-bitsharesrpc"]
 	path = python-bitsharesrpc
 	url = https://github.com/xeroc/python-bitsharesrpc
+[submodule "python-bitsharestools"]
+	path = python-bitsharestools
+	url = https://github.com/xeroc/python-bitsharestools.git
