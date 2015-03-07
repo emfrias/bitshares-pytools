@@ -58,12 +58,39 @@ def publish_rule():
 ## ----------------------------------------------------------------------------
 ## Fetch data
 ## ----------------------------------------------------------------------------
+def fetch_from_yunbi():
+  try :
+   url="https://yunbi.com/api/v2/tickers.json"
+   response = requests.get(url=url, headers=headers, timeout=3)
+   result = response.json()
+  except:
+   print("Error fetching results from yunbi!")
+   if config.yunbi_trust_level > 0.8:
+    sys.exit("Exiting due to exchange importance")
+   return
+
+  availableAssets = [ "BTS" ]
+  for coin in availableAssets :
+   if float(result[coin.lower()+"btc"]["ticker"]["last"]) < config.minValidAssetPrice:
+    print("Unreliable results from yunbi for %s"%(coin))
+    continue
+   price_in_btc[ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["last"]))
+   volume_in_btc[ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["vol"])*config.yunbi_trust_level)
+
+  availableAssets = [ "BTS", "BTC" ]
+  for coin in availableAssets :
+   if float(result[coin.lower()+"cny"]["ticker"]["last"]) < config.minValidAssetPrice:
+    print("Unreliable results from yunbi for %s"%(coin))
+    continue
+   price_in_cny[ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["last"]))
+   volume_in_cny[ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["vol"])*config.yunbi_trust_level)
+
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
   availableAssets = [ "BTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'btc' }
-   response = requests.get(url=url, params=params, headers=headers)
+   response = requests.get(url=url, params=params, headers=headers, timeout=3 )
    result = response.json()
   except: 
    print("Error fetching results from btc38!")
@@ -79,7 +106,7 @@ def fetch_from_btc38():
   availableAssets = [ "BTS", "BTC" ]
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
-   response = requests.get(url=url, params=params, headers=headers)
+   response = requests.get(url=url, params=params, headers=headers, timeout=3 )
    result = response.json()
   except: 
    print("Error fetching results from btc38!")
@@ -95,7 +122,7 @@ def fetch_from_btc38():
 def fetch_from_bter():
   try :
    url="http://data.bter.com/api/1/tickers"
-   response = requests.get(url=url, headers=headers)
+   response = requests.get(url=url, headers=headers, timeout=3 )
    result = response.json()
 
   except:
@@ -131,7 +158,7 @@ def fetch_from_bter():
 def fetch_from_poloniex():
   try:
    url="https://poloniex.com/public?command=returnTicker"
-   response = requests.get(url=url, headers=headers)
+   response = requests.get(url=url, headers=headers, timeout=3 )
    result = response.json()
    availableAssets = [ "BTS" ]
   except:
@@ -148,7 +175,7 @@ def fetch_from_bittrex():
   availableAssets = [ "BTSX" ]
   try:
    url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
-   response = requests.get(url=url, headers=headers)
+   response = requests.get(url=url, headers=headers, timeout=3 )
    result = response.json()["result"]
   except:
    print("Error fetching results from bittrex!")
@@ -167,13 +194,13 @@ def fetch_from_bittrex():
      volume_in_btc[ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
-  try :
+  #try :
    availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
    ## USD/X
    yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers,params=params)
+   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_usd[ bitassetname(a.upper()) ].append(1/float(yahooprices[i-1])) # flipped market
@@ -181,7 +208,7 @@ def fetch_from_yahoo():
    yahooAssets = ",".join([a+"CNY=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers,params=params)
+   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_cny[ bitassetname(a.upper()) ].append(float(yahooprices[i-1])) ## market is the other way round! (yahooAssets)
@@ -189,12 +216,12 @@ def fetch_from_yahoo():
    yahooAssets = ",".join(["EUR"+a+"=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers,params=params)
+   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
-  except:
-   sys.exit("Warning: unknown error - yahoo")
+  #except:
+  # sys.exit("Warning: unknown error - yahoo")
 
 ## ----------------------------------------------------------------------------
 ## GOLD=XAU  SILVER=XAG
@@ -372,6 +399,8 @@ if __name__ == "__main__":
  fetch_from_wallet(rpc)
  print("yahoo", end="",flush=True)
  fetch_from_yahoo()
+ print(", Yunbi", end="",flush=True)
+ fetch_from_yunbi()
  print(", BTC38", end="",flush=True)
  fetch_from_btc38()
  print(", BTer", end="",flush=True)

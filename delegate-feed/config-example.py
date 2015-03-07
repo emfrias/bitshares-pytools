@@ -21,3 +21,4 @@ btc38_trust_level    = 0.7
 bter_trust_level     = 1.0
 poloniex_trust_level = 0.5
 bittrex_trust_level  = 0.5
+yunbi_trust_level    = 0.5
