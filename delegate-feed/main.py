@@ -250,14 +250,14 @@ def fetch_from_wallet(rpc):
   for feed in result["result"] :
    if feed["delegate_name"] == "MARKET":
     price_median_blockchain[asset] = float(feed["median_price"])
-  time.sleep(.5) # Give time for the wallet to do more important tasks!
+  time.sleep(.1) # Give time for the wallet to do more important tasks!
  ## feed from delegates
  for delegate in delegate_list:
   result = rpc.blockchain_get_feeds_from_delegate(delegate)
   for f in result[ "result" ] :
    myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
-  time.sleep(.5) # Give time for the wallet to do more important tasks!
+  time.sleep(.1) # Give time for the wallet to do more important tasks!
 
 ## ----------------------------------------------------------------------------
 ## Send the new feeds!
