@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-import binascii
 from pprint import pprint
 import json
 import sys
