@@ -14,6 +14,7 @@ from math import fabs
 import numpy as num
 import sys
 import config
+from prettytable import PrettyTable
 
 ## ----------------------------------------------------------------------------
 ## When do we have to force publish?
@@ -287,28 +288,28 @@ def get_btsprice():
  ## BTC
  for asset in asset_list_publish :
   for priceBTC in price_in_btc[ asset ] :
-   for idx in range(0, len(price_in_btc["BTS"])) : # Price
+   for idx in range(0, len(price_in_btc["BTS"])) :
     price_in_bts[asset].append( float("%.8g" % float(price_in_btc["BTS"][idx]/priceBTC)))
     volume_in_bts[asset].append(float("%.8g" % float(volume_in_btc["BTS"][idx]/priceBTC)))
  ## CNY
  for asset in asset_list_publish :
   for priceCNY in price_in_cny[ asset ] :
-   for idx in range(0, len(price_in_cny["BTS"])) : # Price
+   for idx in range(0, len(price_in_cny["BTS"])) :
     price_in_bts[asset].append( float("%.8g" % float(price_in_cny["BTS"][idx]/priceCNY)))
     volume_in_bts[asset].append(float("%.8g" % float(volume_in_cny["BTS"][idx]/priceCNY)))
  ## USD
  for asset in asset_list_publish :
   for priceUSD in price_in_usd[ asset ] :
-   for idx in range(0, len(price_in_usd["BTS"])) : # Price
+   for idx in range(0, len(price_in_usd["BTS"])) :
     price_in_bts[asset].append( float("%.8g" % float(price_in_usd["BTS"][idx]/priceUSD)))
     volume_in_bts[asset].append(float("%.8g" % float(volume_in_usd["BTS"][idx]/priceUSD)))
  ## EUR
  for asset in asset_list_publish :
   for priceEUR in price_in_eur[ asset ] :
-   for idx in range(0, len(price_in_eur["BTS"])) : # Price
+   for idx in range(0, len(price_in_eur["BTS"])) :
     price_in_bts[asset].append( float("%.8g" % float(price_in_eur["BTS"][idx]/priceEUR)))
     volume_in_bts[asset].append(float("%.8g" % float(volume_in_eur["BTS"][idx]/priceEUR)))
- 
+
  for asset in asset_list_publish :
   ### Median
   #price_in_bts_average[asset] = statistics.median(price_in_bts[asset])
@@ -318,23 +319,37 @@ def get_btsprice():
   volume     = [b for b in  volume_in_bts[asset] ]
   assetprice = [a for a in  price_in_bts[asset]  ]
   price_in_bts_weighted[asset] = num.average(assetprice, weights=volume)
-
   ### Discount
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
-
 def print_stats() :
- print( "="*220)
+ t = PrettyTable(["asset","my price","my mean","my median","blockchain median","% change (my)","% change (blockchain)","% std exchanges","% spread exchanges","last update"])
+ t.align                   = 'r'
+ t.border                  = True
+ t.float_format['my price']            = ".8"
+ t.float_format['my mean']             = ".8"
+ t.float_format['my median']           = ".8"
+ t.float_format['blockchain median']   = ".8"
+ t.float_format['% change (my)']         = ".5"
+ t.float_format['% change (blockchain)'] = ".5"
+ t.float_format['% std exchanges']       = ".5"
+ t.float_format['% spread exchanges']    = ".5"
+ #t.align['BTC']            = "r"
  for asset in asset_list_publish :
-    p = price_in_bts_weighted[asset]
+    p  = price_in_bts_weighted[asset]
     ps = price_in_bts[asset]
     bc = price_median_blockchain[asset]
-    print("{0: <8}|new: {1:>7.7f}BTS (e:{2:>7.7f}/{3:>7.7f}) (bc:{4:>7.7f})  ".format(asset, p, statistics.mean(ps), statistics.median(ps), bc)+\
-          "|  change: {0:+5.4f}%  ".format((p - myCurrentFeed[asset])*100)+\
-          "|  change (chain): {0:+7.4f}%  ".format((p - bc)*100)+\
-          "|  exchange (med): {0:+7.4f}%  ".format((statistics.median(ps)-p)/p*100)+\
-          "|  exchange (rag): {0:+7.4f}% to {1:+7.4f}%  ".format((num.min(ps)-p)/p*100,(num.max(ps)-p)/p*100 )+\
-          "|  last update: {0!s} ago".format(str(datetime.utcnow()-oldtime[asset]))  )
+    t.add_row([asset, p, \
+               statistics.mean(ps),\
+               statistics.median(ps),\
+               bc,\
+               (p-myCurrentFeed[asset])*100,\
+               (p - bc)*100, \
+               (statistics.median(ps)-p)/p*100,\
+               statistics.mean([ (num.min(ps)-p)/p*100,   (num.max(ps)-p)/p*100 ]),\
+               (str(datetime.utcnow()-oldtime[asset]))\
+              ])
+ print(t.get_string())
 
 ## ----------------------------------------------------------------------------
 ## Run Script
