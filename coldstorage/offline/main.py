@@ -1,9 +1,13 @@
 #!/usr/bin/env python2
 import json
 import sys
-import bitsharestools.address as Address
-import bitsharestools.base58 as b58
-import bitsharestools.transactions as Transaction
+
+try :
+    import bitsharestools.address as Address
+    import bitsharestools.base58 as b58
+    import bitsharestools.transactions as Transaction
+except ImportError :
+    raise ImportError('Module bitsharestools missing')
 
 txfee    =  0.5
 PREFIX   = "BTS"
@@ -36,7 +40,19 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
 
+def readtextfromQR():
+    try :
+        from qrtools import QR
+        from codecs import BOM_UTF8
+    except ImportError :
+        raise ImportError('Module qrtools missing')
+    myCode = QR()
+    myCode.decode_webcam()
+    key = myCode.data_to_string().strip()
+    return key[len(BOM_UTF8):] # fixes zbar!
+
 def readonlinedata() :
+    print("Please input the results of the online tool and press Enter!: ")
     while True :
         withdrawSet = []
         try :
@@ -47,6 +63,9 @@ def readonlinedata() :
 
             if len( withdrawSet ) :
                 break
+        except (EOFError, KeyboardInterrupt):
+            print # end in newline
+            sys.exit(1)
         except :
             print("Error reading input. Try again!")
             continue
@@ -55,9 +74,15 @@ def readonlinedata() :
 def ask_for_target() :
     while True :
         try :
-            address = raw_input("Please type the BTS address(!) of the recipient! (wallet_create_address <account>): ")
+            address = raw_input("Please type the BTS address(!) of the recipient! (wallet_create_address <account>) [empty for QR scanner]: ")
+            if address == "" :
+                print("Press any key if the green rectangle appears!")
+                address = readtextfromQR()
             addressRaw = b58.btsBase58CheckDecode(address[len(PREFIX):])
             return address
+        except (EOFError, KeyboardInterrupt):
+            print # end in newline
+            sys.exit(1)
         except :
             print("Error parsing address. Try again")
             continue
@@ -65,7 +90,10 @@ def ask_for_target() :
 def ask_for_privkey(withdraw) :
     while True :
         try :
-            privkey = raw_input("Please type private key: ")
+            privkey = raw_input("Please type private key [empty for QR scanner]: ")
+            if privkey == "" :
+                print("Press any key if the green rectangle appears!")
+                privkey = readtextfromQR()
             address = Address.priv2btsaddr(Address.wif2hex(privkey))
             print("This private key gives access to funds in address %s" % address)
             for w in withdraw :
@@ -73,6 +101,9 @@ def ask_for_privkey(withdraw) :
                     print("The private key is wrong! It gives access to %s but access to %s is required to sign this tx" % (address, w[5]))
                     raise
             return privkey
+        except (EOFError, KeyboardInterrupt):
+            print # end in newline
+            sys.exit(1)
         except :
             print("Error parsing privkey. Try again")
             continue
