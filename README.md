@@ -4,6 +4,7 @@ This repository contains several tools (mostly written in Python2) that interact
 with the official BitShares client via RPC and perform certain tasks. Most
 prominently:
 
+* **coldstorage**: tools to construct and sign a transaction offline
 * **python-bitsharesrpc**: Submodule required by most tools (see Installation below) to connect to the BitShares client
 * **delegate-feed** (for delegates): script that can be run via cron in order to derive a feed price and publish the price for your delegate(s)
 * **delegate-slate** (for delegates): Construct and deploy a slate for your delegate(s)
@@ -18,6 +19,12 @@ prominently:
 None of the tools require installation. However, they require the
 python-bitsharesrpc module in order to interact with the client via RPC.
 
+In order to install the python-bitsharesrpc package you need to update the
+submodule. The easiest way to install the module goes as:
+
+    git submodule init
+    git submodule update
+
 ## python-bitsharesrpc ##
 
 Connections to the BitShares client are performed using the python-bitsharesrpc
@@ -25,16 +32,28 @@ package. The original sources for the bitsharesrpc package are located at
 
 * https://github.com/xeroc/python-bitsharesrpc
 
-In order to install the python-bitsharesrpc package you need to update the
-submodule. The easiest way to install the module goes as:
+Installtion:
 
-    git submodule init
-    git submodule update
     cd python-bitsharesrpc
     python setup.py install    # (optionally with parameter --user fo non-root installations)
 
 A detailed README for the bitsharesrpc package can be found in the package
 subdirectory: `bitshares-pytools/python-bitsharesrpc/README.md`
+
+## python-bitsharestools ##
+
+Offers low-level tools for BitShares, such as address convertion and transaction
+construction.
+
+* https://github.com/xeroc/python-bitsharestools
+
+Installtion:
+
+    cd python-bitsharestools
+    python setup.py install    # (optionally with parameter --user fo non-root installations)
+
+A detailed README for the bitsharestools package can be found in the package
+subdirectory: `bitshares-pytools/python-bitsharestools/README.md`
 
 # Configuration #
 
