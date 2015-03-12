@@ -1,0 +1,51 @@
+{
+    "bots": [
+        {
+            "bot_type": "market_maker", 
+            "account_name": "marketmaker.account", 
+            "spread_percent": 0.05, 
+            "min_order_size": 1000, 
+            "external_price_tolerance": 0.01, 
+            "asset_pair": [
+                "USD", "BTSX"
+            ], 
+            "min_balance": 100,
+            "maxAgePriceSec" : 900
+        },
+        {
+            "bot_type": "market_balance",
+            "account_name": "balance.bot.account",
+            "spread_percent": 0.05,
+            "asset_pair": [
+                "USD", "BTSX"
+            ],
+            "min_base_balance": 10,
+            "min_quote_balance": 10
+            "useExternalPrice": false
+        },
+        {
+            "bot_type": "market_speculator",
+            "account_name": "speculator.account",
+            "spread_percent": 0.05,
+            "min_order_size": 1000,
+            "external_price_tolerance": 0.01,
+            "asset_pair": [
+                "USD",
+                "BTSX"
+            ],
+            "min_base_balance": 100,
+            "min_quote_balance": 100,
+            "beat_bid_by": 0,
+            "beat_ask_by": 0
+        }
+    ], 
+    "client": {
+        "rpc_host": "localhost", 
+        "rpc_password": "", 
+        "rpc_user": "", 
+        "rpc_port": ""
+    },
+    "log" : "mmbot.log",
+    "logMaxByte" : 102400,
+    "logBackupCnt" : 15
+}
