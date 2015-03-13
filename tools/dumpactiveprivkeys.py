@@ -12,6 +12,6 @@ if __name__ == "__main__":
  accounts = r["result"]
  print "---------------------------------------------------------------------------------"
  for account in accounts :
-  print "%20s - %s - %s" % (account["name"], account["owner_key"], rpc.wallet_dump_private_key(account["owner_key"]))
+  print "%20s - %s - %s" % (account["name"], account["owner_key"], rpc.wallet_dump_account_private_key(account["name"], "active_key"))
  print "---------------------------------------------------------------------------------"
  print rpc.lock()
