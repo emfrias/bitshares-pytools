@@ -21,6 +21,7 @@ Just get the balance of the cold storage address.
     python2 main.py -h
 
 **Example:**
+
     $ python2 main.py --address BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x                                                                                                               ─┘
     Connecting to BitShares RPC
     Available Funds
@@ -47,6 +48,7 @@ default.
     	python2 main.py -h
 
 **Example:**
+
     $ python2 main.py --address BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh                                                                                                              ─┘
     Available funds:
     5.000000 EUR
