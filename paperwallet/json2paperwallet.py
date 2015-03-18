@@ -6,7 +6,7 @@ import bitsharestools.paperwallet as Paper
 import argparse
 
 def main() :
-    parser = argparse.ArgumentParser(description='Arguments for amount and asset')
+    parser = argparse.ArgumentParser(description='Construct a paperwallet and return svg content')
     parser.add_argument('--amount', type=str, help='text (amount) to be placed on the paper wallet')
     parser.add_argument('--asset', type=str, help='asset label to be placed on the paper wallet')
     parser.add_argument('--design', type=str, help='design of the paperwallet (defaults to "cass")')
@@ -21,9 +21,7 @@ def main() :
         except (EOFError, KeyboardInterrupt):
             print # end in newline
             sys.exit(1)
-
             print( lines )
-
         try :
             j = json.loads(lines)
         except :
