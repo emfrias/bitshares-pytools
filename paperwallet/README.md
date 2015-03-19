@@ -3,6 +3,9 @@ The following python libaries are required:
 * csv
 * qrcode
 * lxml
+For BIP38 encrypted paperwallets:
+* python2-pybitcointools
+* python2-scrypt
 
 ## Features ##
 The following images and text boxes are individually replaced:
