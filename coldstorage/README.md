@@ -14,20 +14,19 @@ into a hot wallet (address).
 Two parts:
 
 ### `online` ###
-Just get the balance of the cold storage address.
+Just get the balances stored in the cold storage address.
 
 **Help:**
 
-    python2 main.py -h
+    usage: python2 main.py [-h] [--filename FILENAME] [--rpcurl RPCURL] [--rpcuser RPCUSER] [--rpcpasswd RPCPASSWD] coldaddress
 
 **Example:**
 
-    $ python2 main.py --address BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x                                                                                                               ─┘
-    Connecting to BitShares RPC
-    Available Funds
-    5.000000 EUR
-    0.000000 BTS
-    Stored in file availablefunds.txt (for offline tools)
+    $ python2 main.py BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x
+    Available Funds in cold storage address BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x
+    - 5.000000 EUR
+    - 0.000000 BTS
+    Stored funds for 2 assets in 'availablefunds.txt' for offline construction & signing."
 
 By default writes a txt file `availablefunds.txt` to the current directoy. This
 file has to be moved to the offline computer for construction of the
@@ -45,11 +44,11 @@ default.
 
 **Help:**
 
-    	python2 main.py -h
+    	usage: python2 main.py [-h] [--filename FILENAME] [--txfee TXFEE] [--address ADDRESS] [--prefix PREFIX] [--output OUTPUT]
 
 **Example:**
 
-    $ python2 main.py --address BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh                                                                                                              ─┘
+    $ python2 main.py --address BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh
     Available funds:
     5.000000 EUR
     0.500000 BTS
