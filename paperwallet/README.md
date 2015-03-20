@@ -6,9 +6,11 @@ The following python libaries are required:
 * csv
 * qrcode
 * lxml
+
 For BIP38 encrypted paperwallets:
 * python2-pybitcointools
 * python2-scrypt
+
 For PDF support
 * svg2pdf
 * PyPDF2
@@ -39,7 +41,7 @@ Usage:
 
     bitshares/programs/utils/bts_create_key | python2 json2paperwallet.py -encrypt --amount ZERO --asset USD --design cass mympaperwallet.pdf
 
-### `paperwallets.py` ###
+### `genbulkwallets.py` ###
 Automatically generate alot of paperwallets from a .csv file. This tool is
 intended for giveaways, i.e. sharedrops. The file `wallet-example.cvs`
 contains an example for the input data required for this tool. The columns in
@@ -51,9 +53,11 @@ this order are
 * Asset (Logo of the asset)
 
 Usage:
+
     python2 genbulkwallets.py wallet-example.csv
 
 Example:
+
     $ python2 paperwallets.py 
     Constructing paper wallets
     Creating Paperwallet for BTS4PuD3QAJGZdF9ynn4Xd9MPYUnRCroK7cF
@@ -66,11 +70,6 @@ Example:
     Creating Paperwallet for BTS7jJcGDftS9YxpEd1J8tuakxia5Ugw9ju
     Creating Paperwallet for BTS2RZquTmF3qmnrzfECQGaAeBoy7sMpJiWi
     Done.
-
-    $ python2 svg2pdf.py --output front.pdf paperwallets/*front.svg
-    [...]
-    $ python2 svg2pdf.py --output back.pdf paperwallets/*back.svg
-    [...]
 
 # DISCLAIMER: #
 - I used this to learn how to write python code
