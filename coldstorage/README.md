@@ -44,7 +44,7 @@ default.
 
 **Help:**
 
-    	usage: python2 main.py [-h] [--filename FILENAME] [--txfee TXFEE] [--address ADDRESS] [--prefix PREFIX] [--output OUTPUT]
+        usage: python2 main.py [-h] [--filename FILENAME] [--txfee TXFEE] [--address ADDRESS] [--prefix PREFIX] [--output OUTPUT]
 
 **Example:**
 
@@ -63,44 +63,44 @@ default.
     + Raw and signed transaction for verification:
     --------------------------------------------------------------------------------
     {
-	"operations": [
-	    {
-		"type": "withdraw_op_type", 
-		"data": {
-		    "claim_input_data": "", 
-		    "amount": "50000", 
-		    "balance_id": "BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh"
-		}
-	    }, 
-	    {
-		"type": "withdraw_op_type", 
-		"data": {
-		    "claim_input_data": "", 
-		    "amount": "50000", 
-		    "balance_id": "BTSG9SrG1qe2EtDbJkjbTUN4epSNG755P1y7"
-		}
-	    }, 
-	    {
-		"type": "deposit_op_type", 
-		"data": {
-		    "amount": "50000", 
-		    "condition": {
-			"asset_id": 21, 
-			"slate_id": null, 
-			"type": "withdraw_signature_type", 
-			"data": {
-			    "owner": "BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh", 
-			    "memo": null
-			}
-		    }
-		}
-	    }
-	], 
-	"slate_id": 0, 
-	"signatures": [
-	    "202315d908cfd96eb43ba003d0efbaa02ca9584c79dca1474ed4bc1511bbedbed1ce29bfa0e98f8b78dcabd9c127c50bda18f7d26d5b9f70f0a03bc3f9096f122f"
-	], 
-	"expiration": "2015-03-19T08:23:15"
+    "operations": [
+        {
+        "type": "withdraw_op_type", 
+        "data": {
+            "claim_input_data": "", 
+            "amount": "50000", 
+            "balance_id": "BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh"
+        }
+        }, 
+        {
+        "type": "withdraw_op_type", 
+        "data": {
+            "claim_input_data": "", 
+            "amount": "50000", 
+            "balance_id": "BTSG9SrG1qe2EtDbJkjbTUN4epSNG755P1y7"
+        }
+        }, 
+        {
+        "type": "deposit_op_type", 
+        "data": {
+            "amount": "50000", 
+            "condition": {
+            "asset_id": 21, 
+            "slate_id": null, 
+            "type": "withdraw_signature_type", 
+            "data": {
+                "owner": "BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh", 
+                "memo": null
+            }
+            }
+        }
+        }
+    ], 
+    "slate_id": 0, 
+    "signatures": [
+        "202315d908cfd96eb43ba003d0efbaa02ca9584c79dca1474ed4bc1511bbedbed1ce29bfa0e98f8b78dcabd9c127c50bda18f7d26d5b9f70f0a03bc3f9096f122f"
+    ], 
+    "expiration": "2015-03-19T08:23:15"
     }
     --------------------------------------------------------------------------------
     + stripped output of signed transaction (issue this command in the BTS console):
@@ -126,3 +126,15 @@ default.
 7. Carry the output (console command) to a connected BitShares client and paste the command in the console (the signed transaction is also stored in a txt file in the same directory)
 8. Wait for 1 confirmation.
 9. Done
+
+# DISCLAIMER: #
+- I used this to learn how to write python code
+- don't use with serious money unless you know what you are doing and checked the code
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

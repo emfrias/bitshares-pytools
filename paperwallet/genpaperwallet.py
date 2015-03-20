@@ -15,29 +15,10 @@ def main() :
     parser.set_defaults(design="cass")
     args = parser.parse_args()
 
-    while True : 
-        lines = ""
-        try : 
-            for line in sys.stdin :
-                lines += line
-        except (EOFError, KeyboardInterrupt):
-            print # end in newline
-            sys.exit(1)
-            print( lines )
-        try :
-            j = json.loads(lines)
-        except :
-            print( "Error parsing JSON!" )
-            continue
-        break
+    ''' Generate new wif and address '''
+    wif = Address.newwif()
+    add = Address.wif2btsaddr(wif)
 
-        if  not "wif_private_key" in j or \
-            not "native_address" in j :
-            print( "invalid JSON format! Missing native_address and private_key!" )
-            continue
-
-    wif = j[ "wif_private_key" ]
-    add = j[ "native_address" ]
     ''' Verify that the private keys gives access to address in add '''
     assert Address.priv2btsaddr(Address.wif2hex(wif)) is not add, "private key for address %s is different from given address %s" %(Address.priv2btsaddr(Address.wif2hex(wif)), add) 
 
