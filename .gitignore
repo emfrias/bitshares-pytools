@@ -2,4 +2,7 @@ config.py
 *.pyc
 delegate-payouts-charity
 paperwallet/paperwallets/*.svg
+paperwallet/paperwallets/*.pdf
+paperwallet/*.svg
+paperwallet/*.pdf
 wallet.csv

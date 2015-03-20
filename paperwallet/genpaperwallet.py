@@ -4,6 +4,7 @@ import json
 import bitsharestools.address as Address
 import bitsharestools.paperwallet as Paper 
 import argparse
+import os.path
 
 def main() :
     parser = argparse.ArgumentParser(description='Construct a paperwallet and return svg content')
@@ -33,8 +34,23 @@ def main() :
             else :
                 print("Given Passphrases do not match!")
 
-    svg = (Paper.paperwallet(wif, add, args.amount, args.asset, encrypt=pw, design=args.design))
-    open(args.filename, 'wb').write(svg)
+    front,back = Paper.paperwallet(wif, add, args.amount, args.asset, encrypt=pw, design=args.design)
+
+    extension = os.path.splitext(args.filename)[1]
+    if extension == ".svg" :
+        open(args.filename, 'wb').write(front)
+        open(args.filename.replace('.svg','-back.svg'), 'wb').write(back)
+    elif extension == ".pdf" :
+        import svg2pdf
+        import io
+        from PyPDF2 import PdfFileMerger, PdfFileReader
+        merger = PdfFileMerger()
+        merger.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(front)))))
+        merger.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(back)))))
+        merger.write(args.filename)
+    else :
+        print("unknown extension %s" % extension)
+        return
 
 if __name__ == '__main__':
     main()
