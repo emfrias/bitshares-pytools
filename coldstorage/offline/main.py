@@ -107,7 +107,7 @@ def ask_for_privkey(address) :
             choice = raw_input("Select option: ")
             if choice == "1" :
                 privkey = raw_input("Please provide private key (WIF): ")
-            elif choise == "2" :
+            elif choice == "2" :
                 print("Press any key if the green rectangle appears!")
                 privkey = readtextfromQR()
             else :
@@ -279,10 +279,10 @@ def main() :
     sigtx    = Transaction.SignedTransaction(tx, [privkey])
 
     ''' Store signed transaction '''
-    with open(args.output,"w") as fp :
-        fp.write(str(sigtx.tojson()).replace(' ',''))
+    with open(args.output,"wb") as fp :
+        fp.write(json.dumps(sigtx.tojson()))
     print("\n%d transaction successfully signed and output written to file '%s'" % (len(ops), args.output) )
-    print("To broadcast transaction run ./broadcast/main.py '%s' on online computer" % args.output)
+    print("To broadcast transaction copy the file and run ./online/broadcast_signed_tx.py on online computer")
 
 if __name__ == '__main__':
     main()

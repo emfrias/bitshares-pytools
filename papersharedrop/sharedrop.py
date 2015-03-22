@@ -92,6 +92,6 @@ print( "Broadcasting transaction to the blockchain" )
 print( json.dumps( sigtx.tojson(), indent=4 ) )
 if query_yes_no( "Please confirm the transaction" ) :
     print( "Transmitting!!" )
-    #print(rpc.blockchain_broadcast_transaction(sigtx.tojson()))
+    print(rpc.blockchain_broadcast_transaction(sigtx.tojson()))
 else :
     print("blockchain_broadcast_transaction " + str(sigtx.tojson()).replace(' ',''))
