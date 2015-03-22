@@ -6,6 +6,7 @@ import argparse
 try :
     import bitsharestools.address as Address
     import bitsharestools.base58 as b58
+    import bitsharestools.bip38 as b38
     import bitsharestools.transactions as Transaction
 except ImportError :
     raise ImportError('Module bitsharestools missing')
@@ -96,22 +97,45 @@ def ask_for_target() :
             continue
 
 '''
+Decrypt BIP38 encrypted wif
+'''
+def ask_for_decryption(privkey_raw) :
+    import getpass
+    while True :
+        try :
+            print("The private key is encrypted. A passphrase is required!")
+            pw = getpass.getpass('Passphrase: ')
+            return b38.bip38_decrypt(privkey_raw,pw)
+        except (EOFError, KeyboardInterrupt):
+            print
+            sys.exit(1)
+        except Exception, e:
+            print("Error: %s. Try again!" % str(e))
+            continue
+'''
 Ask for the private key, if not manual (copy/pase) then go to QR-codes
 '''
 def ask_for_privkey(address) :
     while True :
         try :
-            print("Require private key for address %s. How would you like to provide the private key?" % (address) )
             print("1) Type in WIF private key")
             print("2) Use QR scanner")
             choice = raw_input("Select option: ")
             if choice == "1" :
-                privkey = raw_input("Please provide private key (WIF): ")
+                privkey_raw = raw_input("Please provide private key (WIF): ")
             elif choice == "2" :
                 print("Press any key if the green rectangle appears!")
-                privkey = readtextfromQR()
+                privkey_raw = readtextfromQR()
             else :
                 continue
+
+            if privkey_raw[0] == "6" :
+                privkey = ask_for_decryption(privkey_raw)
+            elif privkey_raw[0] == "5" :
+                privkey = privkey_raw
+            else :
+                raise Exception("Expecting WIF/BIP38 private key!")
+
             ''' Verify that the given private key gives access to the cold storage address '''
             addressraw = Address.priv2btsaddr(Address.wif2hex(privkey))
             print("This private key gives access to funds in address %s" % addressraw)
@@ -120,6 +144,11 @@ def ask_for_privkey(address) :
             else :
                 print("The private key is wrong! It gives access to %s but access to %s is required to sign this tx" % (addressraw, address))
                 raise
+
+        except Exception, e:
+            print("Error: %s" % str(e))
+            print("Try again!")
+            continue
         except (EOFError, KeyboardInterrupt):
             print
             sys.exit(1)
