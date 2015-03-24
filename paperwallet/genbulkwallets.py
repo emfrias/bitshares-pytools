@@ -59,19 +59,27 @@ def main() :
         from PyPDF2 import PdfFileMerger, PdfFileReader
         mergerfront = PdfFileMerger()
         mergerback  = PdfFileMerger()
-    for w in wallet :
-        wif,add,amount,asset = w
-        print("Creating Paperwallet for %s" % (add))
-        front,back = Paper.paperwallet(wif, add, amount, asset, encrypt=pw, design=args.design)
-        if args.svg :
+        for w in wallet :
+            wif,add,amount,asset = w
+            print("Creating Paperwallet for %s" % (add))
+            front,back = Paper.paperwallet(wif, add, amount, asset, encrypt=pw, design=args.design)
+            if args.svg :
+                filename = "paperwallets/%s.svg"%add
+                open(filename.replace('.svg','-front.svg'), 'wb').write(front)
+                open(filename.replace('.svg','-back.svg'), 'wb').write(back)
+            else :
+                mergerfront.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(front)))))
+                mergerback.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(back)))))
+        mergerfront.write("paperwallets-front.pdf")
+        mergerback.write("paperwallets-back.pdf")
+    else :
+        for w in wallet :
+            wif,add,amount,asset = w
+            print("Creating Paperwallet for %s" % (add))
+            front,back = Paper.paperwallet(wif, add, amount, asset, encrypt=pw, design=args.design)
             filename = "paperwallets/%s.svg"%add
             open(filename.replace('.svg','-front.svg'), 'wb').write(front)
             open(filename.replace('.svg','-back.svg'), 'wb').write(back)
-        else :
-            mergerfront.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(front)))))
-            mergerback.append(PdfFileReader(io.BytesIO(bytes(svg2pdf.svg2pdf(back)))))
-    mergerfront.write("paperwallets-front.pdf")
-    mergerback.write("paperwallets-back.pdf")
     print( "Done." )
 
 if __name__ == '__main__':

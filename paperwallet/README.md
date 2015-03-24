@@ -56,14 +56,14 @@ Usage:
 
     python2 genbulkwallets.py --wallet wallet-example.csv
     ## or
-    python2 genbulkwallets.py --number 6
+    python2 genbulkwallets.py --number 4
     ## or encrypted
-    python2 genbulkwallets.py --number 6 -encrypt
+    python2 genbulkwallets.py --number 4 -encrypt
 
-Optionally collect them into a single pdf document (6 paperwallets):
+Optionally collect them into a single pdf document (4 paperwallets):
 
-    pdfnup -o main-front.pdf --paper a4paper --nup 2x3 --frame true --scale 0.9 --trim '-1cm -1cm -1cm -1cm' --clip false paperwallets-front.pdf
-    pdfnup -o main-back.pdf --paper a4paper --nup 2x3 --frame true --scale 0.9 --trim '-1cm -1cm -1cm -1cm' --clip false paperwallets-back.pdf
+    pdfnup -o main-front.pdf --paper a4paper --nup 2x2 --frame true --scale 0.9 --trim '-1cm -1cm -1cm -1cm' --clip false paperwallets-front.pdf
+    pdfnup -o main-back.pdf --paper a4paper --nup 2x2 --frame true --scale 0.9 --trim '-1cm -1cm -1cm -1cm' --clip false paperwallets-back.pdf
     pdftk main-front.pdf main-back.pdf cat output main.pdf
 
 
