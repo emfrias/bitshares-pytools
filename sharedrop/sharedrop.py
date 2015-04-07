@@ -70,7 +70,7 @@ def main() :
             print("Something went wrong when loading 'fundwith'.")
             parser.print_usage()
             raise
-        fundwith[ symbol ] = amount*asset["precision"]
+        fundwith[symbol] = amount*asset["precision"]
         sharedroptext += "%.*f%s " % (args.displayprecision, amount, symbol)
         print(" + %f %s" % (amount, symbol))
 
@@ -86,15 +86,16 @@ def main() :
         asset_id  = balance["condition"]["asset_id"]
         asset     = rpc.blockchain_get_asset(asset_id)["result"]
         precision = float(asset["precision"])
-        amount    = int(balance["balance"])/precision
+        amount    = int(balance["balance"])
         symbol    = asset["symbol"]
         have[symbol] = [amount, bIDobj, asset]
 
     ''' Check if enough funded '''
     for symbol in fundwith.keys() : 
         if symbol in have :
-            if fundwith[ symbol ] * args.number > balance["balance"] :
-                raise Exception("Not enough funds. Need %f %s, but only have %f %s" %(fundwith[ symbol ]*args.number/precision, symbol, amount, symbol))
+            amount = have[ symbol ][ 0 ]
+            if fundwith[symbol] * args.number > amount :
+                raise Exception("Not enough funds. Need %f %s, but only have %f %s" %(fundwith[symbol]*args.number, symbol, amount, symbol))
         else : 
             raise Exception("Missing asset %s in address." % symbol)
 
@@ -110,7 +111,7 @@ def main() :
         precision = float(asset["precision"])
         amount    = fundwith[symbol] * args.number
         if symbol == "BTS" :
-            amount += args.txfee * 1e5
+            amount += float(args.txfee) * 1e5
         ops.append(Transaction.Operation("withdraw_op_type", Transaction.Withdraw(bID, amount) ))
         owner = balance["condition"]["data"]["owner"]
         privkeys.append(rpc.wallet_dump_private_key(owner)["result"])
@@ -120,8 +121,8 @@ def main() :
         symbol = "BTS"
         print( "Enforcing TX fee" )
         if symbol in have :
-            if have[symbol] < args.txfee * 1e5 :
-                raise Exception("Not enough funds. Need %f %s, but only have %f %s" %( args.txfee, symbol, have[symbol], symbol))
+            if have[symbol] < float(args.txfee) * 1e5 :
+                raise Exception("Not enough funds. Need %f %s, but only have %f %s" %( float(args.txfee), symbol, have[symbol], symbol))
         else : 
             raise Exception("Missing asset %s in address." % symbol)
         bIDobj    = have[symbol][1]
@@ -130,7 +131,7 @@ def main() :
         balance   = bIDobj[1]
         asset_id  = asset["id"]
         precision = float(asset["precision"])
-        amount    = args.txfee * precision
+        amount    = float(args.txfee) * precision
         ops.append(Transaction.Operation("withdraw_op_type", Transaction.Withdraw(bID, amount) ))
         owner = balance["condition"]["data"]["owner"]
         print( " - Getting private key for signature of owner %s" % owner)
@@ -142,6 +143,7 @@ def main() :
         wif     = Address.newwif()
         wifs.append(wif)
         address  = Address.wif2btsaddr(wif)
+        print(" + Address: %s" % address)
         for symbol in fundwith.keys() :
             bIDobj    = have[symbol][1]
             asset     = have[symbol][2]
