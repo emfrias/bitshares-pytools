@@ -195,7 +195,7 @@ def fetch_from_bittrex():
      volume_in_btc[ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
-  try :
+#  try :
    availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
    ## USD/X
    yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
@@ -221,8 +221,8 @@ def fetch_from_yahoo():
    yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
-  except:
-   sys.exit("Warning: unknown error - yahoo")
+#  except:
+#   sys.exit("Warning: unknown error - yahoo")
 
 ## ----------------------------------------------------------------------------
 ## GOLD=XAU  SILVER=XAG
@@ -323,7 +323,7 @@ def get_btsprice():
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
 def print_stats() :
- t = PrettyTable(["asset","my price","my mean","my median","blockchain median","% change (my)","% change (blockchain)","% std exchanges","% spread exchanges","last update"])
+ t = PrettyTable(["asset","my price","my mean","my median","blockchain median","% change (my)","% change (blockchain)","std exchanges","% spread exchanges","last update"])
  t.align                   = 'r'
  t.border                  = True
  t.float_format['my price']            = ".8"
@@ -332,21 +332,22 @@ def print_stats() :
  t.float_format['blockchain median']   = ".8"
  t.float_format['% change (my)']         = ".5"
  t.float_format['% change (blockchain)'] = ".5"
- t.float_format['% std exchanges']       = ".5"
+ t.float_format['std exchanges']         = ".5"
  t.float_format['% spread exchanges']    = ".5"
  #t.align['BTC']            = "r"
  for asset in asset_list_publish :
-    p  = price_in_bts_weighted[asset]
-    ps = price_in_bts[asset]
-    bc = price_median_blockchain[asset]
-    t.add_row([asset, p, \
-               statistics.mean(ps),\
-               statistics.median(ps),\
-               bc,\
-               (p-myCurrentFeed[asset])*100,\
-               (p - bc)*100, \
-               (statistics.median(ps)-p)/p*100,\
-               statistics.mean([ (num.min(ps)-p)/p*100,   (num.max(ps)-p)/p*100 ]),\
+    weighted_external_price = price_in_bts_weighted[asset]
+    prices_from_exchanges   = price_in_bts[asset]
+    price_from_blockchain   = price_median_blockchain[asset]
+    t.add_row([asset,\
+               weighted_external_price, \
+               statistics.mean(prices_from_exchanges),\
+               statistics.median(prices_from_exchanges),\
+               price_from_blockchain,\
+               ((weighted_external_price - myCurrentFeed[asset])/myCurrentFeed[asset])*100,\
+               ((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100, \
+               (statistics.stdev(prices_from_exchanges)),\
+               (num.max(prices_from_exchanges)-num.min(prices_from_exchanges))/weighted_external_price*100,\
                (str(datetime.utcnow()-oldtime[asset]))\
               ])
  print(t.get_string())

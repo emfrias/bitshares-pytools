@@ -10,25 +10,25 @@ if __name__ == "__main__" :
     r = (rpc.wallet_list_my_accounts())
     accounts = r["result"]
     print "---------------------------------------------------------------------------------"
-    print " # Currently active keys"
+    print " # Currently signing keys"
     print "---------------------------------------------------------------------------------"
     for account in accounts :
-        try : 
-            print "wallet_import_private_key %s   # %20s" % (rpc.wallet_dump_account_private_key(account["name"], "active_key")["result"], account["name"])
-        except :
-            print "%20s - active key unknown" % (account["name"])
+        if "delegate_info" in account :
+            try : 
+                print "wallet_import_private_key %s   # %20s" % (rpc.wallet_dump_account_private_key(account["name"], "signing_key")["result"], account["name"])
+            except :
+                print "%20s - signing key unknown" % (account["name"])
 
     print "---------------------------------------------------------------------------------"
-    print " # Active key history"
+    print " # signing key history"
     print "---------------------------------------------------------------------------------"
     for account in accounts :
-        for a in account["active_key_history"] :
-            address = a[1]
-            try : 
+        if "delegate_info" in account and account["delegate_info"]:
+            for a in account["delegate_info"]["signing_key_history"] :
+                address = a[1]
                 wif = rpc.wallet_dump_private_key(address)["result"]
                 if wif is not None :
                     print "wallet_import_private_key %s   # %20s" % (wif, account["name"])
-            except : pass
 
     print "---------------------------------------------------------------------------------"
-    print rpc.lock()
+    rpc.lock()

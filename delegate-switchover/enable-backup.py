@@ -10,7 +10,7 @@ rpc  = bitsharesrpc.client(config.mainurl, config.mainuser, config.mainpasswd)
 def enable( ) :
     print "checking connectivity"
     rpc2.info()
-    rpc.info()
+#    rpc.info()
 
     print "enabling backup block production"
     rpc2.wallet_open("delegate")
