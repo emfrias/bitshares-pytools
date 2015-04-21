@@ -256,7 +256,7 @@ def fetch_from_wallet(rpc):
  for delegate in delegate_list:
   result = rpc.blockchain_get_feeds_from_delegate(delegate)
   for f in result[ "result" ] :
-   myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
+   myCurrentFeed[ f[ "asset_symbol" ] ] = float(f[ "price" ])
    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
   time.sleep(.1) # Give time for the wallet to do more important tasks!
 
@@ -344,7 +344,7 @@ def print_stats() :
                statistics.mean(prices_from_exchanges),\
                statistics.median(prices_from_exchanges),\
                price_from_blockchain,\
-               ((weighted_external_price - myCurrentFeed[asset])/myCurrentFeed[asset])*100,\
+               ((weighted_external_price - float(myCurrentFeed[asset]))/float(myCurrentFeed[asset]))*100,\
                ((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100, \
                (statistics.stdev(prices_from_exchanges)),\
                (num.max(prices_from_exchanges)-num.min(prices_from_exchanges))/weighted_external_price*100,\
@@ -435,7 +435,7 @@ if __name__ == "__main__":
  for asset in asset_list_publish :
   if len(price_in_bts[asset]) > 0 :
    if price_in_bts_weighted[asset] > 0.0:
-    asset_list_final.append([ asset, price_in_bts_weighted[asset] ])
+    asset_list_final.append([ asset, str("%.15f"  % price_in_bts_weighted[asset]) ])
 
  ## Print some stats ##########################################################
  print_stats()
