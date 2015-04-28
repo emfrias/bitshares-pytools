@@ -14,7 +14,7 @@ if __name__ == "__main__":
  
  print("# Reading delegates")
  privkeys = []
- accounts = rpc.wallet_list_my_accounts()["result"]
+ accounts = rpc.wallet_list_accounts()["result"]
  for account in accounts :
   if account["delegate_info"] :
    if not rpc.wallet_dump_private_key(account["owner_key"])["result"] :

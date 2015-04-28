@@ -9,7 +9,7 @@ rpc.wallet_open(config.wallet)
 rpc.unlock(999999, config.unlock)
 
 print("# Reading accounts")
-accounts = rpc.wallet_list_my_accounts()["result"]
+accounts = rpc.wallet_list_accounts()["result"]
 
 #########################################
 print("\n\n## setting new active keys")
