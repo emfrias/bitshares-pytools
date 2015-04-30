@@ -48,6 +48,7 @@ def main() :
     parser.add_argument('--wallet', type=str, help='')
     parser.add_argument('--unlock', type=str, help='')
     parser.add_argument('--filename', type=str, help='')
+    parser.add_argument('--account', help='user keys linked to account')
     parser.set_defaults(rpcurl=config.url, rpcuser=config.user, rpcpasswd=config.passwd, wallet=config.wallet, unlock=config.unlock, txfee=config.txfee, displayprecision=2, filename="sharedrop-signed-transaction.txt")
     args = parser.parse_args()
 
@@ -82,7 +83,7 @@ def main() :
         bID       = bIDobj[0]
         balance   = bIDobj[1]
         if symbol == "BTS" : ## Substract TX fee right away
-            balance["balance"] -= int(args.txfee * 1e5)
+            balance["balance"] -= int( float(args.txfee) * 1e5)
         asset_id  = balance["condition"]["asset_id"]
         asset     = rpc.blockchain_get_asset(asset_id)["result"]
         precision = float(asset["precision"])
@@ -140,9 +141,14 @@ def main() :
     print( "Constructing Deposit operations" )
     wifs = []
     for didx in xrange( 0, args.number ) :
-        wif     = Address.newwif()
-        wifs.append(wif)
-        address  = Address.wif2btsaddr(wif)
+        if args.account :
+            address = rpc.wallet_address_create( args.account )[ "result" ]
+            wif = rpc.wallet_dump_private_key(address)["result"]
+            wifs.append(wif)
+        else :
+            wif     = Address.newwif()
+            address  = Address.wif2btsaddr(wif)
+            wifs.append(wif)
         print(" + Address: %s" % address)
         for symbol in fundwith.keys() :
             bIDobj    = have[symbol][1]
