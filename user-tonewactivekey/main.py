@@ -9,37 +9,42 @@ rpc.wallet_open(config.wallet)
 rpc.unlock(999999, config.unlock)
 
 print("# Reading accounts")
-accounts = rpc.wallet_list_my_accounts()["result"]
+accounts = rpc.wallet_list_accounts()["result"]
 
+##########################################
+#print("\n\n## setting new active keys")
+#for account in accounts :
+# print("- %20s" % account["name"])
+# try :
+#  rpc.wallet_account_update_active_key(account["name"], config.payee)
+# except :
+#  print("Error changing active key for %s. Probably not able to pay. Please fund account." % account["name"])
+#  continue
+#
 #########################################
-print("\n\n## setting new active keys")
-for account in accounts :
- print("- %20s" % account["name"])
- try :
-  rpc.wallet_account_update_active_key(account["name"], config.payee)
- except :
-  print("Error changing active key for %s. Probably not able to pay. Please fund account." % account["name"])
-  continue
-
-########################################
-print("\n\n## waiting two blocks to confirm")
-rpc.wait_for_block()
-rpc.wait_for_block()
-
+#print("\n\n## waiting two blocks to confirm")
+#rpc.wait_for_block()
+#rpc.wait_for_block()
+#
 ########################################
 print("\n\n## moving funds to new active keys")
 for account in accounts :
- funds = rpc.balance(account["name"])["result"]
- if not funds or funds == [] or funds == None : continue
- for f in funds[0][1] : 
-  if f[0] == 0 : continue
-  asset  = rpc.blockchain_get_asset(f[0])["result"]
-  symbol = asset["symbol"]
-  precision = asset["precision"]
-  amount = float(f[1])/precision
-  if amount == 0.0: continue
-  print("-- %20s : sending %f %s" % (account["name"], amount, symbol))
-  rpc.wallet_transfer(amount, symbol, account["name"], account["name"], "new active key")
+    funds = rpc.balance(account["name"])["result"]
+    if not funds or funds == [] or funds == None : continue
+    for f in funds[0][1] : 
+        if f[0] == 0 and account["name"]==config.payee: continue
+        asset  = rpc.blockchain_get_asset(f[0])["result"]
+        symbol = asset["symbol"]
+        precision = asset["precision"]
+        amount = float(f[1])/precision
+        if amount == 0: continue
+        if f[0] == 0 : amount-=txfee
+        print("-- %20s : sending %f %s" % (account["name"], amount, symbol))
+        try :
+            rpc.wallet_transfer(str(amount), symbol, account["name"], account["name"], "new active key")
+        except : 
+            print( "Error transfering: %f %s from %s" %(amount, symbol, account["name"]) )
+
 
 ########################################
 print("\n\n## waiting two blocks to confirm")
@@ -50,10 +55,11 @@ rpc.wait_for_block()
 print("\n\n## moving remaining BTS to new active keys")
 ## Move BTS separatly as tx fees are payed from BTS
 for account in accounts :
- amount    = rpc.market.get_balance(account["name"], "0") - txfee
- if amount > 0.0 :
-  print("-- %20s : sending %f %s" % (account["name"], amount, symbol))
-  rpc.wallet_transfer(amount, "BTS", account["name"], account["name"], "new active key")
+    if account["name"]==config.payee:
+        amount    = rpc.market.get_balance(account["name"], "0") - txfee
+        if amount > 0.0 :
+            print("-- %20s : sending %f %s" % (account["name"], amount, symbol))
+            rpc.wallet_transfer(str(amount), "BTS", account["name"], account["name"], "new active key")
 
 ########################################
 print("\n\n## new active keys")
