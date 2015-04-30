@@ -11,22 +11,7 @@ try :
 except ImportError :
     raise ImportError('Python package "bitsharesrpc" missing! Read the README in the main repository directory!')
 import argparse
-
-''' Get available funds from bitshares rpc '''
-def get_available_balances(rpc, address):
-    balances = []
-    for b in rpc.blockchain_list_address_balances(address)["result"] :
-        asset_id = b[1]["condition"]["asset_id"]
-        asset    = rpc.blockchain_get_asset(asset_id)["result"]
-        balances.append( {
-                "balanceid" : b[0],
-                "balance"   : (b[1]["balance"])/float(asset["precision"]),
-                "symbol"    : asset["symbol"],
-                "asset_id"  : asset["id"],
-                "precision" : asset["precision"],
-                "owner"     : b[1]["condition"]["data"]["owner"]
-            })
-    return balances
+from tools import get_available_balances
 
 def main() :
     parser = argparse.ArgumentParser(description='Offline tool to gather balances in cold storage address')

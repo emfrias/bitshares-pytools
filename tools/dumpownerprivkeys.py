@@ -7,7 +7,7 @@ if __name__ == "__main__" :
     rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
     rpc.wallet_open(config.wallet)
     rpc.unlock(9999,config.unlock)
-    r = (rpc.wallet_list_my_accounts())
+    r = (rpc.wallet_list_accounts())
     accounts = r["result"]
     print "---------------------------------------------------------------------------------"
     print " # Owner keys "
