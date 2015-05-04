@@ -24,6 +24,7 @@ if __name__ == "__main__" :
     for account in accounts :
         for a in account["active_key_history"] :
             address = a[1]
+            if address is account["owner_key"] : continue ## make sure not to dump the owner key
             try : 
                 wif = rpc.wallet_dump_private_key(address)["result"]
                 if wif is not None :
