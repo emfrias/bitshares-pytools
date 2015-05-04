@@ -1,5 +1,7 @@
 config.py
 *.pyc
+*.txt
+*.csv
 delegate-payouts-charity
 paperwallet/paperwallets/*.svg
 paperwallet/paperwallets/*.pdf

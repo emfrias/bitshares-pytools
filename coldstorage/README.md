@@ -18,11 +18,11 @@ Just get the balances stored in the cold storage address.
 
 **Help:**
 
-    usage: python2 main.py [-h] [--filename FILENAME] [--rpcurl RPCURL] [--rpcuser RPCUSER] [--rpcpasswd RPCPASSWD] coldaddress
+    usage: python2 online.py [-h] [--filename FILENAME] [--rpcurl RPCURL] [--rpcuser RPCUSER] [--rpcpasswd RPCPASSWD] coldaddress
 
 **Example:**
 
-    $ python2 main.py BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x
+    $ python2 online.py BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x
     Available Funds in cold storage address BTS4CNbXqeEym7JopKYvL16qVKUe9kRMMC8x
     - 5.000000 EUR
     - 0.000000 BTS
@@ -44,11 +44,11 @@ default.
 
 **Help:**
 
-        usage: python2 main.py [-h] [--filename FILENAME] [--txfee TXFEE] [--address ADDRESS] [--prefix PREFIX] [--output OUTPUT]
+        usage: python2 offline.py [-h] [--filename FILENAME] [--txfee TXFEE] [--address ADDRESS] [--prefix PREFIX] [--output OUTPUT]
 
 **Example:**
 
-    $ python2 main.py --address BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh
+    $ python2 offline.py --address BTSUTgrMqNAGqvhCJdYtuqVGkTCjP7ss3bh
     Available funds:
     5.000000 EUR
     0.500000 BTS
@@ -110,6 +110,19 @@ default.
     + signed transaction stored in file signedtx.txt
     --------------------------------------------------------------------------------
 
+### Broadcasting ###
+
+The default behavior is to load the RPC configuration from `config.py` and
+broadcast the content of `signedtx.txt` to the BitShares network.
+
+**Help:**
+
+    usage: broadcast_signed_tx.py [-h] [--filename FILENAME] [--rpcurl RPCURL] [--rpcuser RPCUSER] [--rpcpasswd RPCPASSWD]
+
+**Example:**
+
+    python broadcast_signed_tx.py
+
 ## What's the procedure? ##
 ### Online ###
 1. Go into the `online` part of the program and define the connection parameters to a running BitShares client in the `config.py` file
@@ -117,13 +130,13 @@ default.
 3. Run the `online` part of the program (it will list the funds stored in the cold storage address)
 
 ### Offline ###
-1. Copy the balance file from the online tool over to the offline tool directory (on an offline computer)
-2. Execute the `offline` program and optionally give the file name as parameter (see `python2 main.py -h` for help)
+1. Copy the balance file from the online tool over to the offline computer
+2. Execute the `offline` program and optionally give the file name as parameter (see `python2 offline.py -h` for help)
 3. Define the amount and asset you want to withdraw from the cold storage address
 4. Paste the recipient address (or scan it with a webcam as QR-code)
 5. Paste the private key (or scan it with a webcam as QR-code) -- The private key will be verified prior to signing.
 6. The `offline` program constructs and signs a BitShares transaction 
-7. Carry the output (console command) to a connected BitShares client and paste the command in the console (the signed transaction is also stored in a txt file in the same directory)
+7. Carry over the signed transaction file and execute `broadcast_signed_tx.py` on the online computer
 8. Wait for 1 confirmation.
 9. Done
 

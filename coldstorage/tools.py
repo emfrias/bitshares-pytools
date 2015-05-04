@@ -1,3 +1,11 @@
+try :
+    import bitsharestools.address as Address
+    import bitsharestools.base58 as b58
+    import bitsharestools.bip38 as b38
+    import bitsharestools.transactions as Transaction
+except ImportError :
+    raise ImportError('Error importing bitsharestools')
+
 '''
 Verify that the funds the user wants to withdraw are available according to the balance file
 '''
@@ -159,7 +167,7 @@ def ask_for_decryption(privkey_raw) :
 '''
 Ask for the private key, if not manual (copy/pase) then go to QR-codes
 '''
-def ask_for_privkey(address) :
+def ask_for_privkey(address=None) :
     while True :
         try :
             print("1) Type in WIF private key")
@@ -183,11 +191,12 @@ def ask_for_privkey(address) :
             ''' Verify that the given private key gives access to the cold storage address '''
             addressraw = Address.priv2btsaddr(Address.wif2hex(privkey))
             print("This private key gives access to funds in address %s" % addressraw)
-            if str(address).strip() == str(addressraw).strip() :
-                return str(privkey).strip()
-            else :
-                print("The private key is wrong! It gives access to %s but access to %s is required to sign this tx" % (addressraw, address))
-                raise
+            if address : 
+                if str(address).strip() == str(addressraw).strip() :
+                    return str(privkey).strip()
+                else :
+                    print("The private key is wrong! It gives access to %s but access to %s is required to sign this tx" % (addressraw, address))
+                    raise
 
         except Exception, e:
             print("Error: %s" % str(e))
