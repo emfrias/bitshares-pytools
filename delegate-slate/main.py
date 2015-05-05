@@ -15,16 +15,16 @@ if __name__ == "__main__":
  ret = rpc.unlock(999999, config.unlock)
 
  # get all accounts known to the client
- accounts = rpc.wallet_list_accounts()["result"]
+ accounts = rpc.wallet_list_approvals()["result"]
 
  print( "Unapproving all previously approve delegates" )
  for account in accounts :
-  rpc.wallet_approve_delegate(account["name"], "0")
+  rpc.wallet_approve(account["name"], "0")
 
  print( "Approving trusted delegates" )
  for d in config.trusted :
   print( " - %s" % d )
-  rpc.wallet_approve_delegate(d)
+  rpc.wallet_approve(d)
 
  ## publish slate
  ret = rpc.wallet_publish_slate(config.slatedelegate, config.slatepayee)

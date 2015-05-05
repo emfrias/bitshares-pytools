@@ -20,7 +20,7 @@ if __name__ == "__main__":
  else :
   payout = float(account["delegate_info"]["pay_balance"]) - config.txfee*config.btsprecision
   print "Withdrawing %10.5f BTS from %s to %s" % (account["delegate_info"]["pay_balance"]/config.btsprecision,account["name"], config.exchangename)
-  ret = rpc.wallet_delegate_withdraw_pay(account["name"],config.exchangename,payout/config.btsprecision, "auto pay day") 
+  ret = rpc.wallet_delegate_withdraw_pay(account["name"],config.exchangename,str((payout/config.btsprecision)), "auto pay day") 
   ## wait
   rpc.wait_for_block()
   rpc.wait_for_block()
@@ -35,7 +35,7 @@ if __name__ == "__main__":
   if asset == "BTS" : 
    amount += config.txfee # no need for fee
    continue
-  feedprice = rpc.blockchain_market_status( asset , "BTS" )["result"]["current_feed_price"]
+  feedprice = float(rpc.blockchain_market_status( asset , "BTS")["result"]["current_feed_price"])
   askprice = feedprice / (1-config.spread)
   quant    = amount * percent
   if quant < 0 : continue
@@ -57,7 +57,7 @@ if __name__ == "__main__":
   if asset == "BTS" : continue
   if amount > 0.0 :
    print "Sending %10.5f %s from %s to %s" % (amount,asset,config.exchangename,config.payoutname)
-   ret = rpc.wallet_transfer(amount, asset, config.exchangename, config.payoutname, "auto payex")
+   ret = rpc.wallet_transfer(str(amount), asset, config.exchangename, config.payoutname, "auto payex")
 
  ## wait
  rpc.wait_for_block()
@@ -70,7 +70,7 @@ if __name__ == "__main__":
  amount    = rpc.market.get_balance( config.exchangename, assetid) - config.txfee - config.withdrawlimit  # keep 10x config.txfee as reserve
  if amount > 0.0 :
   print "Sending %10.5f BTS from %s to %s" % (amount,config.exchangename,config.payoutname)
-  ret = rpc.wallet_transfer(amount, "BTS", config.exchangename, config.payoutname, "auto payex")
+  ret = rpc.wallet_transfer(str(amount), "BTS", config.exchangename, config.payoutname, "auto payex")
 
  # Lock wallet #######################################################
  rpc.lock()
