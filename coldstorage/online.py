@@ -11,11 +11,11 @@ try :
 except ImportError :
     raise ImportError('Python package "bitsharesrpc" missing! Read the README in the main repository directory!')
 import argparse
-from tools import get_available_balances
+from tools import get_available_balances, ask_for_address
 
 def main() :
     parser = argparse.ArgumentParser(description='Offline tool to gather balances in cold storage address')
-    parser.add_argument('coldaddress', type=str, help='cold storage address to get funds from (required)')
+    parser.add_argument('--coldaddress', type=str, help='cold storage address to get funds from (required)')
     parser.add_argument('--filename', type=str, help='filename in which to store the available funds')
     parser.add_argument('--rpcurl', type=str, help='')
     parser.add_argument('--rpcuser', type=str, help='')
@@ -23,6 +23,10 @@ def main() :
     parser.set_defaults(rpcurl=config.url, rpcuser=config.user, rpcpasswd=config.passwd)
     parser.set_defaults(filename="availablefunds.txt")
     args = parser.parse_args()
+
+    if not args.coldaddress :
+        print("No voteaddress given! Please specify!")
+        args.coldaddress  = ask_for_address() 
 
     ''' Connect to bitshares client via RPC '''
     rpc = bitsharesrpc.client(args.rpcurl, args.rpcuser, args.rpcpasswd)

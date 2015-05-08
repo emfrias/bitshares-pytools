@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import sys
+import json
 
 try :
     import config
@@ -24,6 +25,7 @@ from tools import ask_for_address, ask_for_privkey
 def main() :
     parser = argparse.ArgumentParser(description='Offline tool to gather balances in cold storage address')
     parser.add_argument('--voteaddress', type=str, help='address that will be allowed to vote with cold funds instead')
+    parser.add_argument('--account', type=str, help='account that will be allowed to vote with cold funds instead')
     parser.add_argument('--rpcurl', type=str, help='')
     parser.add_argument('--rpcuser', type=str, help='')
     parser.add_argument('--rpcpasswd', type=str, help='')
@@ -36,40 +38,42 @@ def main() :
     PREFIX   = args.prefix
     slate_id = None
 
-    if not args.address :
+    ''' Connect to bitshares client via RPC '''
+    rpc = bitsharesrpc.client(args.rpcurl, args.rpcuser, args.rpcpasswd)
+
+    if not args.voteaddress and not args.account :
+        print("No voteaddress given! Please specify!")
         args.voteaddress  = ask_for_address() 
-    try :
-        b58.btsBase58CheckDecode(args.voteaddress[len(PREFIX):])
-    except :
-        raise Exception("Invalid vote address format")
+    if args.account :
+        args.voteaddress  = rpc.wallet_address_create(args.account)[ "result" ]
+        print("Using %s from account %s" %(args.voteaddress, args.account))
 
     ''' Ask for the private key '''
     privkey  = ask_for_privkey()
     address  = Address.priv2btsaddr(Address.wif2hex(privkey))
 
-    ''' Connect to bitshares client via RPC '''
-    rpc = bitsharesrpc.client(args.rpcurl, args.rpcuser, args.rpcpasswd)
-
     ''' balance ids '''
     balances = rpc.blockchain_list_address_balances(address)["result"]
+    print("This address holds the following BTS funds (ignoring other assets):")
     ops      = []
     for balance in balances :
         balanceId = balance[0]
         asset_id  = balance[1]["condition"]["asset_id"]
         asset    = rpc.blockchain_get_asset(asset_id)["result"]
         if asset_id == 0 :
+            if balance[1]["balance"] == 0: continue
             print("- %f BTS" % ((balance[1]["balance"])/float(asset["precision"])))
-            votekeyop      = Transaction.UpdateBalanceVote(balanceID, args.voteaddress, slate_id)
-            ops.append(Operation( "update_balance_vote_op_type", votekeyop ))
+            votekeyop      = Transaction.UpdateBalanceVote(balanceId, args.voteaddress, slate_id)
+            ops.append(Transaction.Operation( "update_balance_vote_op_type", votekeyop ))
 
-    tx             = Transaction( 60*60*12, None, ops )
-    sigtx          = SignedTransaction(tx, [privkey])
+    tx             = Transaction.Transaction( 60*60*12, None, ops )
+    sigtx          = Transaction.SignedTransaction(tx, [privkey])
 
     ''' Store signed transaction '''
     with open(args.output,"wb") as fp :
         fp.write(json.dumps(sigtx.tojson()))
     print("\n%d transaction successfully signed and output written to file '%s'" % (len(ops), args.output) )
-    print("To broadcast transaction copy the file and run ./online/broadcast_signed_tx.py on online computer")
+    print("To broadcast transaction copy the file and run ./broadcast_signed_tx.py on online computer")
 
 if __name__ == '__main__':
     main()

@@ -6,6 +6,8 @@ try :
 except ImportError :
     raise ImportError('Error importing bitsharestools')
 
+PREFIX = "BTS"
+
 '''
 Verify that the funds the user wants to withdraw are available according to the balance file
 '''
@@ -82,21 +84,26 @@ def input_transfer_asset_balances() :
 If not given as parameter, ask the user for the hot wallet address
 '''
 def ask_for_address() :
-    global PREFIX
     while True :
-        try :
-            address = raw_input("Please type the BTS address(!) of the recipient! (wallet_create_address <account>) [empty for QR scanner]: ")
-            if address == "" :
+        #try :
+            print("1) Type in WIF private key")
+            print("2) Use QR scanner")
+            choice = raw_input("Select option: ")
+            if choice == "1" :
+                address = raw_input("Please provide the BTS address: ")
+            elif choice == "2" :
                 print("Press any key if the green rectangle appears!")
                 address = readtextfromQR()
+            else :
+                continue
             b58.btsBase58CheckDecode(address[len(PREFIX):])
             return address
-        except (EOFError, KeyboardInterrupt):
-            print # end in newline
-            sys.exit(1)
-        except :
-            print("Error parsing address. Try again!")
-            continue
+        #except (EOFError, KeyboardInterrupt):
+        #    print # end in newline
+        #    sys.exit(1)
+        #except :
+        #    print("Error parsing address. Try again!")
+        #    continue
 
 '''
 Meta function to read stuff from QR code
@@ -197,6 +204,8 @@ def ask_for_privkey(address=None) :
                 else :
                     print("The private key is wrong! It gives access to %s but access to %s is required to sign this tx" % (addressraw, address))
                     raise
+            else :
+                return str(privkey).strip()
 
         except Exception, e:
             print("Error: %s" % str(e))
