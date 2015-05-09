@@ -85,7 +85,7 @@ If not given as parameter, ask the user for the hot wallet address
 '''
 def ask_for_address() :
     while True :
-        #try :
+        try :
             print("1) Type in WIF private key")
             print("2) Use QR scanner")
             choice = raw_input("Select option: ")
@@ -98,12 +98,12 @@ def ask_for_address() :
                 continue
             b58.btsBase58CheckDecode(address[len(PREFIX):])
             return address
-        #except (EOFError, KeyboardInterrupt):
-        #    print # end in newline
-        #    sys.exit(1)
-        #except :
-        #    print("Error parsing address. Try again!")
-        #    continue
+        except (EOFError, KeyboardInterrupt):
+            print # end in newline
+            sys.exit(1)
+        except :
+            print("Error parsing address. Try again!")
+            continue
 
 '''
 Meta function to read stuff from QR code

@@ -23,19 +23,16 @@ import argparse
 from tools import ask_for_address, ask_for_privkey
 
 def main() :
-    parser = argparse.ArgumentParser(description='Offline tool to gather balances in cold storage address')
+    parser = argparse.ArgumentParser(description='Tool to update the voter key of a coldstorage address')
     parser.add_argument('--voteaddress', type=str, help='address that will be allowed to vote with cold funds instead')
     parser.add_argument('--account', type=str, help='account that will be allowed to vote with cold funds instead')
     parser.add_argument('--rpcurl', type=str, help='')
     parser.add_argument('--rpcuser', type=str, help='')
     parser.add_argument('--rpcpasswd', type=str, help='')
-    parser.add_argument('--prefix', type=str, help='defaults to "BTS" (advanced feature)')
     parser.add_argument('--output', type=str, help='filename into which the signed output is stored')
     parser.set_defaults(rpcurl=config.url, rpcuser=config.user, rpcpasswd=config.passwd)
     parser.set_defaults(output="signedtx.txt")
-    parser.set_defaults(prefix="BTS")
     args = parser.parse_args()
-    PREFIX   = args.prefix
     slate_id = None
 
     ''' Connect to bitshares client via RPC '''
