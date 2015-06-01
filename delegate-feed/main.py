@@ -195,7 +195,7 @@ def fetch_from_bittrex():
      volume_in_btc[ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
-#  try :
+  try :
    availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
    ## USD/X
    yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
@@ -221,8 +221,8 @@ def fetch_from_yahoo():
    yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
-#  except:
-#   sys.exit("Warning: unknown error - yahoo")
+  except:
+   sys.exit("Warning: unknown error - yahoo")
 
 ## ----------------------------------------------------------------------------
 ## GOLD=XAU  SILVER=XAG
@@ -316,9 +316,12 @@ def get_btsprice():
   ### Mean
   #price_in_bts_average[asset] = statistics.mean(price_in_bts[asset])
   ### Weighted Mean
-  volume     = [b for b in  volume_in_bts[asset] ]
-  assetprice = [a for a in  price_in_bts[asset]  ]
-  price_in_bts_weighted[asset] = num.average(assetprice, weights=volume)
+  if len(price_in_bts[asset]) > 1:
+   volume     = [b for b in  volume_in_bts[asset] ]
+   assetprice = [a for a in  price_in_bts[asset]  ]
+   price_in_bts_weighted[asset] = num.average(assetprice, weights=volume)
+  else :
+   price_in_bts_weighted[asset] = price_in_bts[asset] 
   ### Discount
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
@@ -339,6 +342,7 @@ def print_stats() :
     weighted_external_price = price_in_bts_weighted[asset]
     prices_from_exchanges   = price_in_bts[asset]
     price_from_blockchain   = price_median_blockchain[asset]
+    if len(prices_from_exchanges) < 1 : continue # empty asset
     t.add_row([asset,\
                weighted_external_price, \
                statistics.mean(prices_from_exchanges),\
