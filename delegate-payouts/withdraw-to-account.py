@@ -4,15 +4,22 @@ import config
 import re
 
 withdrawfee = 0.1 * 1e5;
+
 rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
-if __name__ == "__main__":
- rpc.wallet_open("delegate")
- rpc.unlock(99999999, config.unlock)
- for an in config.accountname :
-   account = rpc.wallet_get_account(an)["result"]
-   if account["delegate_info"] :
-    if account["delegate_info"]["pay_balance"] > withdrawfee:
-     payout = float(account["delegate_info"]["pay_balance"]) - withdrawfee
-     print "%20s -- %20.5f -- %20.5f" % (account["name"], account["delegate_info"]["pay_balance"]/1.0e5, payout/1.0e5)
-     print rpc.wallet_delegate_withdraw_pay(account["name"],config.payoutname,payout/1.0e5,"auto pay day") 
- rpc.lock()
+rpc.wallet_open(config.wallet)
+rpc.unlock(999999,config.unlock)
+
+# Withdraw delegate pay #############################################
+print("-"*80)
+print("| Withdrawing delegate pay")
+print("-"*80)
+account = rpc.wallet_get_account(config.accountname)["result"]
+assert "delegate_info" in account, "Account %s not registered as delegate" % config.accountname
+if float(account["delegate_info"]["pay_balance"]) < config.withdrawlimit*config.btsprecision :
+ print "Not enough pay to withdraw yet!"
+else :
+ payout = float(account["delegate_info"]["pay_balance"]) - config.txfee*config.btsprecision
+ print "Withdrawing %10.5f BTS from %s to %s" % (account["delegate_info"]["pay_balance"]/config.btsprecision,account["name"], config.exchangename)
+ ret = rpc.wallet_delegate_withdraw_pay(account["name"],config.exchangename,str((payout/config.btsprecision)), "auto pay day") 
+
+rpc.lock()
