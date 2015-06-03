@@ -1,3 +1,4 @@
+import sys
 try :
     import bitsharestools.address as Address
     import bitsharestools.base58 as b58
@@ -7,6 +8,25 @@ except ImportError :
     raise ImportError('Error importing bitsharestools')
 
 PREFIX = "BTS"
+
+def query_yes_no(question, default="yes"):
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:    prompt = " [y/n] "
+    elif default == "yes": prompt = " [Y/n] "
+    elif default == "no":  prompt = " [y/N] "
+    else :
+        raise ValueError("invalid default answer: '%s'" % default)
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else :
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")              
 
 '''
 Verify that the funds the user wants to withdraw are available according to the balance file
@@ -69,7 +89,7 @@ def input_transfer_asset_balances() :
         for w in withdraw.keys() :
             print("%f %s" %( withdraw[w], w))
 
-        if rpc.query_yes_no( "Want more?" ) :
+        if query_yes_no( "Want more?" ) :
             continue
         break
     withdrawUnique = {}
