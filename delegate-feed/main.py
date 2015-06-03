@@ -221,9 +221,9 @@ def fetch_from_yahoo():
    yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
+
    # indices
-   availableAssets = ["399106.SZ"]
-   #availableAssets = ["399106.SZ","000001.SS"]
+   availableAssets = ["399106.SZ", "^HSI", "^IXIC", "^N225"]
    yahooAssets = ",".join(availableAssets)
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
@@ -231,6 +231,7 @@ def fetch_from_yahoo():
    yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
      price_in_cny[ bitassetname(a.upper()) ].append(float(yahooprices[i-1])) ## market is the other way round! (yahooAssets)
+
   except:
    sys.exit("Warning: unknown error - yahoo")
 
@@ -244,8 +245,14 @@ def bitassetname(asset) :
   return "SILVER"
  elif asset == "399106.SZ" : 
   return "SHENZHEN"
- elif asset == "000001.SS" : 
-  return "SHANGHAI"
+ #elif asset == "000001.SS" : 
+ # return "SHANGHAI"
+ elif asset == "^HSI" : 
+  return "HANGSENG"
+ elif asset == "^IXIC" : 
+  return "NASDAQC"
+ elif asset == "^N225" : 
+  return "NIKKEI"
  else :
   return asset
 
@@ -337,6 +344,8 @@ def get_btsprice():
   else :
    price_in_bts_weighted[asset] = price_in_bts[asset] 
   ### Discount
+  print(asset)
+  print(price_in_bts_weighted[asset])
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
 def print_stats() :
@@ -379,7 +388,7 @@ if __name__ == "__main__":
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
  ## rpc variables about bts rpc ###############################################
  rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
- asset_list_all = ["BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW", "SHENZHEN", "SHANGHAI"]
+ asset_list_all = ["BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW", "SHENZHEN", "HANGSENG", "NASDAQC", "NIKKEI"]
  delegate_list  = config.delegate_list
  ## Call Parameters ###########################################################
  if len( sys.argv ) < 2 :
