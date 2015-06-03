@@ -248,19 +248,24 @@ def fetch_from_wallet(rpc):
 ## Send the new feeds!
 ## ----------------------------------------------------------------------------
 def update_feed(rpc,assets):
- ## Try to connect to delegate
- rpc.info()
- ## unlock wallet
- print( "Opening wallet %s" % config.wallet )
- ret = rpc.wallet_open(config.wallet)
- print( "Unlocking wallet" )
- ret = rpc.unlock(999999, config.unlock)
- # for each delegate update the list
- for delegate in config.delegate_list:
-  print("publishing feeds for delegate: %s"%delegate)
-  result = rpc.wallet_publish_feeds(delegate, assets)
- ## close wallet
- rpc.lock()
+ wallet_was_unlocked = false
+ 
+ info = rpc.info()["result"]
+ if not info["wallet_open"] :
+  print( "Opening wallet %s" % config.wallet )
+  ret = rpc.wallet_open(config.wallet)
+
+ if not info["wallet_unlocked"] :
+  wallet_was_unlocked = True
+  print( "Unlocking wallet" )
+  ret = rpc.unlock(999999, config.unlock)
+  for delegate in config.delegate_list:
+   print("publishing feeds for delegate: %s"%delegate)
+   result = rpc.wallet_publish_feeds(delegate, assets)
+
+ if wallet_was_unlocked :
+  print( "Relocking wallet" )
+  rpc.lock()
 
 ## ----------------------------------------------------------------------------
 ## calculate feed prices in BTS for all assets given the exchange prices in USD,CNY,BTC,...
