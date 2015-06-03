@@ -321,7 +321,10 @@ def print_stats() :
     mean_exchanges          = 1/statistics.mean(prices_from_exchanges)
     median_exchanges        = 1/statistics.median(prices_from_exchanges)
     change_my               = 1/(((weighted_external_price - float(cur_feed))/float(cur_feed))*100)
-    change_blockchain       = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
+    if price_from_blockchain == 0 :
+     change_blockchain      = -1
+    else :
+     change_blockchain      = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
     std_exchanges           = 1/(statistics.stdev(prices_from_exchanges))
     spread_exchanges        = 1/((num.max(prices_from_exchanges)-num.min(prices_from_exchanges)) / weighted_external_price*100)
     t.add_row([asset,
