@@ -38,7 +38,7 @@ def publish_rule():
  ##############################################################################
  for asset in asset_list_publish :
   ## Define REAL_PRICE
-  realPrice[asset] = statistics.median( price_in_bts[asset] )
+  realPrice[asset] = statistics.median( price["BTS"][asset] )
   ## Rules 
   if (datetime.utcnow()-oldtime[asset]).total_seconds() > config.maxAgeFeedInSeconds :
         print("Feeds for %s too old! Force updating!" % asset)
@@ -62,74 +62,74 @@ def publish_rule():
 def fetch_from_yunbi():
   try :
    url="https://yunbi.com/api/v2/tickers.json"
-   response = requests.get(url=url, headers=headers, timeout=3)
+   response = requests.get(url=url, headers=_request_headers, timeout=3)
    result = response.json()
-  except:
-   print("Error fetching results from yunbi!")
+  except Exception as e:
+   print("\nError fetching results from yunbi! ({0})\n".format(str(e)))
    if config.yunbi_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance")
+    sys.exit("\nExiting due to exchange importance\n")
    return
 
   availableAssets = [ "BTS" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"btc"]["ticker"]["last"]) < config.minValidAssetPrice:
-    print("Unreliable results from yunbi for %s"%(coin))
+    print("\nUnreliable results from yunbi for %s"%(coin))
     continue
-   price_in_btc[ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["last"]))
-   volume_in_btc[ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["vol"])*config.yunbi_trust_level)
+   price["BTC"][ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["last"]))
+   volume["BTC"][ coin ].append(float(result[coin.lower()+"btc"]["ticker"]["vol"])*config.yunbi_trust_level)
 
   availableAssets = [ "BTS", "BTC" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"cny"]["ticker"]["last"]) < config.minValidAssetPrice:
     print("Unreliable results from yunbi for %s"%(coin))
     continue
-   price_in_cny[ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["last"]))
-   volume_in_cny[ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["vol"])*config.yunbi_trust_level)
+   price["CNY"][ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["last"]))
+   volume["CNY"][ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["vol"])*config.yunbi_trust_level)
 
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
   availableAssets = [ "BTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'btc' }
-   response = requests.get(url=url, params=params, headers=headers, timeout=3 )
+   response = requests.get(url=url, params=params, headers=_request_headers, timeout=3 )
    result = response.json()
-  except: 
-   print("Error fetching results from btc38!")
+  except Exception as e:
+   print("\nError fetching results from btc38! ({0})\n".format(str(e)))
    if config.btc38_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance!")
+    sys.exit("\nExiting due to exchange importance!\n")
    return
 
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config.minValidAssetPrice:
-    price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config.btc38_trust_level)
+    price["BTC"][ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+    volume["BTC"][ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config.btc38_trust_level)
 
   availableAssets = [ "BTS", "BTC" ]
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
-   response = requests.get(url=url, params=params, headers=headers, timeout=3 )
+   response = requests.get(url=url, params=params, headers=_request_headers, timeout=3 )
    result = response.json()
-  except: 
-   print("Error fetching results from btc38!")
+  except Exception as e:
+   print("\nError fetching results from btc38! ({0})\n".format(str(e)))
    if config.btc38_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance!")
+    sys.exit("\nExiting due to exchange importance!\n")
    return
 
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config.minValidAssetPrice:
-    price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config.btc38_trust_level)
+    price["CNY"][ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+    volume["CNY"][ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config.btc38_trust_level)
 
 def fetch_from_bter():
   try :
    url="http://data.bter.com/api/1/tickers"
-   response = requests.get(url=url, headers=headers, timeout=3 )
+   response = requests.get(url=url, headers=_request_headers, timeout=3 )
    result = response.json()
 
-  except:
-   print("Error fetching results from bter!")
+  except Exception as e:
+   print("\nError fetching results from bter! ({0})\n".format(str(e)))
    if config.bter_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance")
+    sys.exit("\nExiting due to exchange importance\n")
    return
 
   availableAssets = [ "BTS" ]
@@ -137,51 +137,51 @@ def fetch_from_bter():
    if float(result[coin.lower()+"_btc"]["last"]) < config.minValidAssetPrice:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
-   volume_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["vol_btc"])*config.bter_trust_level)
+   price["BTC"][ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
+   volume["BTC"][ coin ].append(float(result[coin.lower()+"_btc"]["vol_btc"])*config.bter_trust_level)
 
   availableAssets = [ "BTC", "BTS" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"_usd"]["last"]) < config.minValidAssetPrice:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
-   volume_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*config.bter_trust_level)
+   price["USD"][ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
+   volume["USD"][ coin ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*config.bter_trust_level)
 
   availableAssets = [ "BTS", "BTC" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"_cny"]["last"]) < config.minValidAssetPrice:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
-   volume_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config.bter_trust_level)
+   price["CNY"][ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
+   volume["CNY"][ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config.bter_trust_level)
 
 def fetch_from_poloniex():
   try:
    url="https://poloniex.com/public?command=returnTicker"
-   response = requests.get(url=url, headers=headers, timeout=3 )
+   response = requests.get(url=url, headers=_request_headers, timeout=3 )
    result = response.json()
    availableAssets = [ "BTS" ]
-  except:
-   print("Error fetching results from poloniex!")
+  except Exception as e:
+   print("\nError fetching results from poloniex! ({0})\n".format(str(e)))
    if config.poloniex_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance!")
+    sys.exit("\nExiting due to exchange importance!\n")
    return
   for coin in availableAssets :
-   if float(result["BTC_"+coin.upper()]["last"])>config.minValidAssetPrice:
-    price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
-    volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config.poloniex_trust_level)
+   if float(result["BTC_"+coin]["last"])>config.minValidAssetPrice:
+    price["BTC"][ coin ].append(float(result["BTC_"+coin]["last"]))
+    volume["BTC"][ coin ].append(float(result["BTC_"+coin]["baseVolume"])*config.poloniex_trust_level)
 
 def fetch_from_bittrex():
   availableAssets = [ "BTSX" ]
   try:
    url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
-   response = requests.get(url=url, headers=headers, timeout=3 )
+   response = requests.get(url=url, headers=_request_headers, timeout=3 )
    result = response.json()["result"]
-  except:
-   print("Error fetching results from bittrex!")
+  except Exception as e:
+   print("\nError fetching results from bittrex! ({0})\n".format(str(e)))
    if config.bittrex_trust_level > 0.8:
-    sys.exit("Exiting due to exchange importance!")
+    sys.exit("\nExiting due to exchange importance!\n")
    return
   for coin in result :
    if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
@@ -191,49 +191,33 @@ def fetch_from_bittrex():
     if altcoin=="BTSX" : 
      coinmap="BTS"
     if float(coin["Last"]) > config.minValidAssetPrice:
-     price_in_btc[ coinmap ].append(float(coin["Last"]))
-     volume_in_btc[ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
+     price["BTC"][ coinmap ].append(float(coin["Last"]))
+     volume["BTC"][ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
   try :
-   availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
-   ## USD/X
-   yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
-   url="http://download.finance.yahoo.com/d/quotes.csv"
-   params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
-   yahooprices =  response.text.replace('\r','').split( '\n' )
-   for i,a in enumerate(availableAssets,1) :
-    price_in_usd[ bitassetname(a.upper()) ].append(1/float(yahooprices[i-1])) # flipped market
-   ## CNY/X
-   yahooAssets = ",".join([a+"CNY=X" for a in availableAssets])
-   url="http://download.finance.yahoo.com/d/quotes.csv"
-   params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
-   yahooprices =  response.text.replace('\r','').split( '\n' )
-   for i,a in enumerate(availableAssets,1) :
-    price_in_cny[ bitassetname(a.upper()) ].append(float(yahooprices[i-1])) ## market is the other way round! (yahooAssets)
-   ## EUR/X
-   yahooAssets = ",".join(["EUR"+a+"=X" for a in availableAssets])
-   url="http://download.finance.yahoo.com/d/quotes.csv"
-   params = {'s':yahooAssets,'f':'l1','e':'.csv'}
-   response = requests.get(url=url, headers=headers, timeout=3 ,params=params)
-   yahooprices =  response.text.replace('\r','').split( '\n' )
-   for i,a in enumerate(availableAssets,1) :
-    price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
-  except:
-   sys.exit("Warning: unknown error - yahoo")
+   for base in _yahoo_base :
+    yahooAssets = ",".join([a+base+"=X" for a in _yahoo_quote])
+    url="http://download.finance.yahoo.com/d/quotes.csv"
+    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
+    response = requests.get(url=url, headers=_request_headers, timeout=3 ,params=params)
+    yahooprices =  response.text.replace('\r','').split( '\n' )
+    for i,a in enumerate(_yahoo_quote) :
+     if float(yahooprices[i]) > 0 :
+      price[base][ bts_yahoo_map(a) ].append(float(yahooprices[i]))
 
-## ----------------------------------------------------------------------------
-## GOLD=XAU  SILVER=XAG
-## ----------------------------------------------------------------------------
-def bitassetname(asset) :
- if asset == "XAU" : 
-  return "GOLD"
- elif asset == "XAG" : 
-  return "SILVER"
- else :
-  return asset
+   # indices
+   yahooAssets = ",".join(_yahoo_indices.keys())
+   url="http://download.finance.yahoo.com/d/quotes.csv"
+   params = {'s':yahooAssets,'f':'l1','e':'.csv'}
+   response = requests.get(url=url, headers=_request_headers, timeout=3 ,params=params)
+   yahooprices =  response.text.replace('\r','').split( '\n' )
+   for i,a in enumerate(_yahoo_indices) :
+    if float(yahooprices[i]) > 0 :
+     price[ list(_yahoo_indices.values())[i] ][ bts_yahoo_map(a) ].append(float(yahooprices[i]))
+
+  except Exception as e:
+    sys.exit("\nError fetching results from yahoo! {0}".format(str(e)))
 
 ## ----------------------------------------------------------------------------
 ## Fetch current feeds, assets and feeds of assets from wallet
@@ -253,7 +237,7 @@ def fetch_from_wallet(rpc):
     price_median_blockchain[asset] = float(feed["median_price"])
   time.sleep(.1) # Give time for the wallet to do more important tasks!
  ## feed from delegates
- for delegate in delegate_list:
+ for delegate in config.delegate_list:
   result = rpc.blockchain_get_feeds_from_delegate(delegate)
   for f in result[ "result" ] :
    myCurrentFeed[ f[ "asset_symbol" ] ] = float(f[ "price" ])
@@ -272,147 +256,156 @@ def update_feed(rpc,assets):
  print( "Unlocking wallet" )
  ret = rpc.unlock(999999, config.unlock)
  # for each delegate update the list
- for delegate in delegate_list:
+ for delegate in config.delegate_list:
   print("publishing feeds for delegate: %s"%delegate)
   result = rpc.wallet_publish_feeds(delegate, assets)
  ## close wallet
  rpc.lock()
 
 ## ----------------------------------------------------------------------------
-## calculate feed prices in BTS for all assets given the exchange prices in USD,CNY,BTC
+## calculate feed prices in BTS for all assets given the exchange prices in USD,CNY,BTC,...
 ## ----------------------------------------------------------------------------
 def get_btsprice():
- for asset in asset_list_publish :
-  price_in_bts[asset] = []
-  volume_in_bts[asset] = []
- ## BTC
- for asset in asset_list_publish :
-  for priceBTC in price_in_btc[ asset ] :
-   for idx in range(0, len(price_in_btc["BTS"])) :
-    price_in_bts[asset].append( float("%.8g" % float(price_in_btc["BTS"][idx]/priceBTC)))
-    volume_in_bts[asset].append(float("%.8g" % float(volume_in_btc["BTS"][idx]/priceBTC)))
- ## CNY
- for asset in asset_list_publish :
-  for priceCNY in price_in_cny[ asset ] :
-   for idx in range(0, len(price_in_cny["BTS"])) :
-    price_in_bts[asset].append( float("%.8g" % float(price_in_cny["BTS"][idx]/priceCNY)))
-    volume_in_bts[asset].append(float("%.8g" % float(volume_in_cny["BTS"][idx]/priceCNY)))
- ## USD
- for asset in asset_list_publish :
-  for priceUSD in price_in_usd[ asset ] :
-   for idx in range(0, len(price_in_usd["BTS"])) :
-    price_in_bts[asset].append( float("%.8g" % float(price_in_usd["BTS"][idx]/priceUSD)))
-    volume_in_bts[asset].append(float("%.8g" % float(volume_in_usd["BTS"][idx]/priceUSD)))
- ## EUR
- for asset in asset_list_publish :
-  for priceEUR in price_in_eur[ asset ] :
-   for idx in range(0, len(price_in_eur["BTS"])) :
-    price_in_bts[asset].append( float("%.8g" % float(price_in_eur["BTS"][idx]/priceEUR)))
-    volume_in_bts[asset].append(float("%.8g" % float(volume_in_eur["BTS"][idx]/priceEUR)))
+ # derive BTS prices for all _base assets
+ for base in _bases :
+  for quote in _bases :
+   if base == quote : continue
+   for ratio in price[base][quote] :
+    for idx in range(0, len(price[base]["BTS"])) :
+     price[quote]["BTS"].append( float("%.8g" % float(price[base]["BTS"][idx] /ratio)))
+     volume[quote]["BTS"].append(float("%.8g" % float(volume[base]["BTS"][idx]/ratio)))
+
+ for base in _bases :
+  for quote in asset_list_publish :
+   for ratio in price[ base ][ quote ] :
+    for idx in range(0, len(price[base]["BTS"])) :
+     price["BTS"][quote].append( float("%.8g" % float(price[base]["BTS"][idx] /ratio)))
+     volume["BTS"][quote].append(float("%.8g" % float(volume[base]["BTS"][idx]/ratio)))
 
  for asset in asset_list_publish :
   ### Median
-  #price_in_bts_average[asset] = statistics.median(price_in_bts[asset])
+  #price_in_bts_average[asset] = statistics.median(price["BTS"][asset])
   ### Mean
-  #price_in_bts_average[asset] = statistics.mean(price_in_bts[asset])
+  #price_in_bts_average[asset] = statistics.mean(price["BTS"][asset])
   ### Weighted Mean
-  if len(price_in_bts[asset]) > 1:
-   volume     = [b for b in  volume_in_bts[asset] ]
-   assetprice = [a for a in  price_in_bts[asset]  ]
-   price_in_bts_weighted[asset] = num.average(assetprice, weights=volume)
-  else :
-   price_in_bts_weighted[asset] = price_in_bts[asset] 
+  assetvolume= [b for b in  volume["BTS"][asset] ]
+  assetprice = [a for a in  price["BTS"][asset]  ]
+  price_in_bts_weighted[asset] = num.average(assetprice, weights=assetvolume)
   ### Discount
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
+## ----------------------------------------------------------------------------
+## Print stats as table
+## ----------------------------------------------------------------------------
 def print_stats() :
- t = PrettyTable(["asset","my price","my mean","my median","blockchain median","% change (my)","% change (blockchain)","std exchanges","% spread exchanges","last update"])
+ t = PrettyTable(["asset","BTS/base","my mean","my median","blockchain median","% change (my)","% change (blockchain)","std exchanges","% spread exchanges","last update"])
  t.align                   = 'r'
  t.border                  = True
- t.float_format['my price']            = ".8"
- t.float_format['my mean']             = ".8"
- t.float_format['my median']           = ".8"
- t.float_format['blockchain median']   = ".8"
+ t.float_format['BTS/base']              = ".8"
+ t.float_format['my mean']               = ".8"
+ t.float_format['my median']             = ".8"
+ t.float_format['blockchain median']     = ".8"
  t.float_format['% change (my)']         = ".5"
  t.float_format['% change (blockchain)'] = ".5"
  t.float_format['std exchanges']         = ".5"
  t.float_format['% spread exchanges']    = ".5"
  #t.align['BTC']            = "r"
  for asset in asset_list_publish :
+    if len(price["BTS"][asset]) < 1 : continue # empty asset
+    age                     = (str(datetime.utcnow()-oldtime[asset]))
     weighted_external_price = price_in_bts_weighted[asset]
-    prices_from_exchanges   = price_in_bts[asset]
+    prices_from_exchanges   = price["BTS"][asset]
     price_from_blockchain   = price_median_blockchain[asset]
-    if len(prices_from_exchanges) < 1 : continue # empty asset
-    t.add_row([asset,\
-               weighted_external_price, \
-               statistics.mean(prices_from_exchanges),\
-               statistics.median(prices_from_exchanges),\
-               price_from_blockchain,\
-               ((weighted_external_price - float(myCurrentFeed[asset]))/float(myCurrentFeed[asset]))*100,\
-               ((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100, \
-               (statistics.stdev(prices_from_exchanges)),\
-               (num.max(prices_from_exchanges)-num.min(prices_from_exchanges))/weighted_external_price*100,\
-               (str(datetime.utcnow()-oldtime[asset]))\
-              ])
+    cur_feed                = myCurrentFeed[asset]
+    ## Stats
+    mean_exchanges          = 1/statistics.mean(prices_from_exchanges)
+    median_exchanges        = 1/statistics.median(prices_from_exchanges)
+    change_my               = 1/(((weighted_external_price - float(cur_feed))/float(cur_feed))*100)
+    change_blockchain       = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
+    std_exchanges           = 1/(statistics.stdev(prices_from_exchanges))
+    spread_exchanges        = 1/((num.max(prices_from_exchanges)-num.min(prices_from_exchanges)) / weighted_external_price*100)
+    t.add_row([asset,
+               weighted_external_price,
+               mean_exchanges,
+               median_exchanges,
+               price_from_blockchain,
+               change_my,
+               change_blockchain,
+               std_exchanges,
+               spread_exchanges,
+               age ])
  print(t.get_string())
+
+## ----------------------------------------------------------------------------
+## Asset rename world<->BTS
+## ----------------------------------------------------------------------------
+def bts_yahoo_map(asset) :
+ if asset in _bts_yahoo_map:
+  return _bts_yahoo_map[asset]
+ else :
+  return asset
 
 ## ----------------------------------------------------------------------------
 ## Run Script
 ## ----------------------------------------------------------------------------
 if __name__ == "__main__":
- ## API header ################################################################
- headers = {'content-type': 'application/json',
+ _all_bts_assets = ["BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD",
+                   "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD",
+                   "KRW", "SHENZHEN", "HANGSENG", "NASDAQC", "NIKKEI"]
+ _bases =["CNY", "USD", "BTC", "EUR", "HKD", "JPY"]
+ _yahoo_base  = ["USD","EUR","CNY","JPY","HKD"]
+ _yahoo_quote = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
+ _yahoo_indices = {
+                     "399106.SZ" : "CNY",  # SHENZHEN
+                     "^HSI"      : "HKD",  # HANGSENG
+                     "^IXIC"     : "USD",  # NASDAQC
+                     "^N225"     : "JPY"   # NIKKEI
+                 }
+ _bts_yahoo_map = {
+      "XAU"       : "GOLD",
+      "XAG"       : "SILVER",
+      "399106.SZ" : "SHENZHEN",
+      "000001.SS" : "SHANGHAI",
+      "^HSI"      : "HANGSENG",
+      "^IXIC"     : "NASDAQC",
+      "^N225"     : "NIKKEI"
+ }
+ _request_headers = {'content-type': 'application/json',
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
- ## rpc variables about bts rpc ###############################################
- rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
- asset_list_all = ["BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
- delegate_list  = config.delegate_list
  ## Call Parameters ###########################################################
- if len( sys.argv ) < 2 :
-  sys.exit( "Usage: bts_feed.py <space separated list of currencies>" )
- else :
-  if sys.argv[1] == "ALL":
-   asset_list_publish = asset_list_all
-  else :
+ asset_list_publish = _all_bts_assets
+ if len( sys.argv ) > 1 :
+  if sys.argv[1] != "ALL":
    asset_list_publish = sys.argv
    asset_list_publish.pop(0)
 
  ## Initialization
- volume_in_cny           = {}
- volume_in_usd           = {}
- volume_in_btc           = {}
- volume_in_eur           = {}
- volume_in_bts           = {}
- price_in_cny            = {}
- price_in_usd            = {}
- price_in_btc            = {}
- price_in_eur            = {}
- price_in_bts            = {}
  price_in_bts_weighted   = {}
- volume                  = {}
  myCurrentFeed           = {}
  price_median_blockchain = {}
  realPrice               = {}
  assetprecision          = {}
  assetprecision["BTS"]   = 1e5
  oldtime                 = {}
+ price                   = {}
+ volume                  = {}
 
- for asset in asset_list_all + ["BTS"]: 
-  price_in_bts[ asset ]         = []
-  price_in_eur[ asset ]          = []
-  price_in_usd[ asset ]          = []
-  price_in_btc[ asset ]          = []
-  price_in_cny[ asset ]          = []
-  volume_in_eur[ asset ]         = []
-  volume_in_usd[ asset ]         = []
-  volume_in_btc[ asset ]         = []
-  volume_in_cny[ asset ]         = []
-  volume_in_bts[ asset ]        = []
-  price_in_bts_weighted[asset]  = 0.0
+ for base in _bases  + ["BTS"]:
+  price[base]            = {}
+  volume[base]           = {}
+  for asset in _all_bts_assets + ["BTS"]: 
+   price[base][asset]    = []
+   volume[base][asset]   = []
+
+ for asset in _all_bts_assets + ["BTS"]: 
+  price_in_bts_weighted[asset]   = 0.0
   myCurrentFeed[asset]           = 0.0
   price_median_blockchain[asset] = 0.0
   realPrice[asset]               = 0.0
   oldtime[asset]                 = datetime.utcnow()
+
+ ## rpc variables about bts rpc ###############################################
+ rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
 
  ## Get prices and stats ######################################################
  print("Loading data: ", end="",flush=True)
@@ -437,7 +430,7 @@ if __name__ == "__main__":
  ## Only publish given feeds ##################################################
  asset_list_final = []
  for asset in asset_list_publish :
-  if len(price_in_bts[asset]) > 0 :
+  if len(price["BTS"][asset]) > 0 :
    if price_in_bts_weighted[asset] > 0.0:
     asset_list_final.append([ asset, str("%.15f"  % price_in_bts_weighted[asset]) ])
 
