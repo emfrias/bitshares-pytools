@@ -248,7 +248,7 @@ def fetch_from_wallet(rpc):
 ## Send the new feeds!
 ## ----------------------------------------------------------------------------
 def update_feed(rpc,assets):
- wallet_was_unlocked = false
+ wallet_was_unlocked = False
  
  info = rpc.info()["result"]
  if not info["wallet_open"] :
@@ -259,9 +259,10 @@ def update_feed(rpc,assets):
   wallet_was_unlocked = True
   print( "Unlocking wallet" )
   ret = rpc.unlock(999999, config.unlock)
-  for delegate in config.delegate_list:
-   print("publishing feeds for delegate: %s"%delegate)
-   result = rpc.wallet_publish_feeds(delegate, assets)
+
+ for delegate in config.delegate_list:
+  print("publishing feeds for delegate: %s"%delegate)
+  result = rpc.wallet_publish_feeds(delegate, assets)
 
  if wallet_was_unlocked :
   print( "Relocking wallet" )

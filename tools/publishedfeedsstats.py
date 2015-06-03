@@ -7,6 +7,7 @@ from prettytable import PrettyTable
 import statistics
 
 numDelegates = 101
+large_deviation_from_median = 2 # percent
 
 if __name__ == "__main__":
  delegatefeeds = []
@@ -55,7 +56,7 @@ if __name__ == "__main__":
   assetstr = ""
   for a in p[ "feeds" ] :
    deviation_from_median = (float(a["price"]) - medianPrice[ a["asset_symbol"]])/medianPrice[ a["asset_symbol"]] * 100
-   if deviation_from_median > 1.5 :
+   if deviation_from_median > large_deviation_from_median :
     assetstr += "%8s, %11.8f (med%+8.3f%%)\n" % (a["asset_symbol"], float(a[ "price" ]), deviation_from_median)
   if assetstr != "" :
    tableLargeDev.add_row([p["name"], p["top"], p["numValidFeeds"], assetstr ])
