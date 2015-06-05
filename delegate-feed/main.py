@@ -15,6 +15,7 @@ import numpy as num
 import sys
 import config
 from prettytable import PrettyTable
+import threading
 
 ## ----------------------------------------------------------------------------
 ## When do we have to force publish?
@@ -45,12 +46,12 @@ def publish_rule():
         return True
   elif realPrice[asset]     < price_median_blockchain[asset] and \
        myCurrentFeed[asset] > price_median_blockchain[asset]:
-        print("External price move for %s: realPrice(%f) < feedmedian(%f) and newprice(%f) > feedmedian(%f) Force updating!"\
+        print("External price move for %s: realPrice(%.8f) < feedmedian(%.8f) and newprice(%.8f) > feedmedian(%f) Force updating!"\
                % (asset,realPrice[asset],price_median_blockchain[asset],realPrice[asset],price_median_blockchain[asset]))
         return True
   elif fabs(myCurrentFeed[asset]-realPrice[asset])/realPrice[asset] > config.change_min and\
        (datetime.utcnow()-oldtime[asset]).total_seconds() > config.maxAgeFeedInSeconds > 20*60:
-        print("New Feeds differs too much for %s %.2f > %.2f! Force updating!" \
+        print("New Feeds differs too much for %s %.8f > %.8f! Force updating!" \
                % (asset,fabs(myCurrentFeed[asset]-realPrice[asset]), config.change_min))
         return True
  ## default: False
@@ -326,14 +327,15 @@ def print_stats() :
     ## Stats
     mean_exchanges          = 1/statistics.mean(prices_from_exchanges)
     median_exchanges        = 1/statistics.median(prices_from_exchanges)
-    if cur_feed == 0 :              change_my              = -1
-    else :                          change_my              = 1/(((weighted_external_price - float(cur_feed))/float(cur_feed))*100)
-    if price_from_blockchain == 0 : change_blockchain      = -1
-    else :                          change_blockchain      = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
-    std_exchanges           = 1/(statistics.stdev(prices_from_exchanges))
     spread_exchanges        = 1/((num.max(prices_from_exchanges)-num.min(prices_from_exchanges)) / weighted_external_price*100)
+    if cur_feed == 0 :               change_my              = -1
+    else :                           change_my              = 1/(((weighted_external_price - float(cur_feed))/float(cur_feed))*100)
+    if price_from_blockchain == 0 :  change_blockchain      = -1
+    else :                           change_blockchain      = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
+    if len(prices_from_exchanges)<2: std_exchanges          = -1
+    else :                           std_exchanges          = 1/(statistics.stdev(prices_from_exchanges)/weighted_external_price*100)
     t.add_row([asset,
-               weighted_external_price,
+               1/weighted_external_price,
                mean_exchanges,
                median_exchanges,
                price_from_blockchain,
@@ -416,21 +418,21 @@ if __name__ == "__main__":
  rpc = bitsharesrpc.client(config.url, config.user, config.passwd)
 
  ## Get prices and stats ######################################################
- print("Loading data: ", end="",flush=True)
- fetch_from_wallet(rpc)
- print("yahoo", end="",flush=True)
- fetch_from_yahoo()
- print(", Yunbi", end="",flush=True)
- fetch_from_yunbi()
- print(", BTC38", end="",flush=True)
- fetch_from_btc38()
- print(", BTer", end="",flush=True)
- fetch_from_bter()
- print(", Poloniex", end="",flush=True)
- fetch_from_poloniex()
- print(", bittrex", end="",flush=True)
- fetch_from_bittrex()
- print(" -- done. Calculating bts feeds prices and checking publish rules.")
+ mythreads = {}
+ mythreads["wallet"]   = threading.Thread(target = fetch_from_wallet,args = (rpc,))
+ mythreads["yahoo"]    = threading.Thread(target = fetch_from_yahoo)
+ mythreads["yunbi"]    = threading.Thread(target = fetch_from_yunbi)
+ mythreads["btc38"]    = threading.Thread(target = fetch_from_btc38)
+ mythreads["bter"]     = threading.Thread(target = fetch_from_bter)
+ mythreads["poloniex"] = threading.Thread(target = fetch_from_poloniex)
+ mythreads["bittrex"]  = threading.Thread(target = fetch_from_bittrex)
+
+ print("[Starting Threads]: ", end="",flush=True)
+ for t in mythreads :
+  print("(%s)"%t, end="",flush=True)
+  mythreads[t].start()
+ for t in mythreads :
+  mythreads[t].join() # Will wait for a thread until it finishes its task.
 
  ## Determine bts price ######################################################
  get_btsprice()
