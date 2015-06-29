@@ -44,7 +44,11 @@ if __name__ == "__main__":
  tableAssets.float_format['std']     = ".10"
  medianPrice = {}
  for a in feedprice :
-  tableAssets.add_row([a, statistics.mean(feedprice[a]), statistics.stdev(feedprice[a]), statistics.median(feedprice[a])])
+  if len(feedprice[a])>1 :
+   mystd = statistics.stdev(feedprice[a])
+  else :
+   mystd = -1
+  tableAssets.add_row([a, statistics.mean(feedprice[a]), mystd, statistics.median(feedprice[a])])
   medianPrice[ a ] = statistics.median(feedprice[a])
  print(tableAssets.get_string(sortby="std", reversesort=False))
 
