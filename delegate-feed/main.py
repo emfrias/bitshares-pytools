@@ -305,7 +305,7 @@ def get_btsprice():
 ## Print stats as table
 ## ----------------------------------------------------------------------------
 def print_stats() :
- t = PrettyTable(["asset","BTS/base","my mean","my median","blockchain median","% change (my)","% change (blockchain)","std exchanges","% spread exchanges","last update"])
+ t = PrettyTable(["asset","BTS/base","my mean","my median","blockchain median","% change (my)","% change (blockchain)","last update"])
  t.align                   = 'r'
  t.border                  = True
  t.float_format['BTS/base']              = ".8"
@@ -314,8 +314,6 @@ def print_stats() :
  t.float_format['blockchain median']     = ".8"
  t.float_format['% change (my)']         = ".5"
  t.float_format['% change (blockchain)'] = ".5"
- t.float_format['std exchanges']         = ".5"
- t.float_format['% spread exchanges']    = ".5"
  #t.align['BTC']            = "r"
  for asset in asset_list_publish :
     if len(price["BTS"][asset]) < 1 : continue # empty asset
@@ -323,28 +321,23 @@ def print_stats() :
     weighted_external_price = price_in_bts_weighted[asset]
     prices_from_exchanges   = price["BTS"][asset]
     price_from_blockchain   = price_median_blockchain[asset]
-    cur_feed                = myCurrentFeed[asset]
+    cur_feed                = float(myCurrentFeed[asset])
     ## Stats
-    mean_exchanges          = 1/statistics.mean(prices_from_exchanges)
-    median_exchanges        = 1/statistics.median(prices_from_exchanges)
-    spread_exchanges        = 1/((num.max(prices_from_exchanges)-num.min(prices_from_exchanges)) / weighted_external_price*100)
+    mean_exchanges          = statistics.mean(prices_from_exchanges)
+    median_exchanges        = statistics.median(prices_from_exchanges)
     if cur_feed == 0 :               change_my              = -1
-    else :                           change_my              = 1/(((weighted_external_price - float(cur_feed))/float(cur_feed))*100)
+    else :                           change_my              = ((weighted_external_price - cur_feed)/cur_feed)*100
     if price_from_blockchain == 0 :  change_blockchain      = -1
-    else :                           change_blockchain      = 1/(((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100)
-    if len(prices_from_exchanges)<2: std_exchanges          = -1
-    else :                           std_exchanges          = 1/(statistics.stdev(prices_from_exchanges)/weighted_external_price*100)
+    else :                           change_blockchain      = ((weighted_external_price - price_from_blockchain)/price_from_blockchain)*100
     t.add_row([asset,
                1/weighted_external_price,
-               mean_exchanges,
-               median_exchanges,
+               1/mean_exchanges,
+               1/median_exchanges,
                price_from_blockchain,
                change_my,
                change_blockchain,
-               std_exchanges,
-               spread_exchanges,
                age ])
- print(t.get_string())
+ print("\n"+t.get_string())
 
 ## ----------------------------------------------------------------------------
 ## Asset rename world<->BTS
@@ -433,6 +426,7 @@ if __name__ == "__main__":
   mythreads[t].start()
  for t in mythreads :
   mythreads[t].join() # Will wait for a thread until it finishes its task.
+  print(".", end="",flush=True)
 
  ## Determine bts price ######################################################
  get_btsprice()
