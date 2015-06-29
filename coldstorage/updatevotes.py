@@ -48,7 +48,11 @@ def main() :
             if asset_id == 0 :
                 if balance[1]["balance"] == 0: continue
                 print("- %f BTS" % ((balance[1]["balance"])/float(asset["precision"])))
-                rpc.wallet_balance_set_vote_info(balanceId, "", "vote_recommended")
+                try :
+                    rpc.wallet_balance_set_vote_info(balanceId, "", "vote_recommended")
+                except Exception, e:
+                    print("Error: %s", e)
+
     rpc.lock()
 
 if __name__ == '__main__':
