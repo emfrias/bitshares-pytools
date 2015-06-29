@@ -61,6 +61,7 @@ def publish_rule():
 ## Fetch data
 ## ----------------------------------------------------------------------------
 def fetch_from_yunbi():
+  global price, volume
   try :
    url="https://yunbi.com/api/v2/tickers.json"
    response = requests.get(url=url, headers=_request_headers, timeout=3)
@@ -88,6 +89,7 @@ def fetch_from_yunbi():
    volume["CNY"][ coin ].append(float(result[coin.lower()+"cny"]["ticker"]["vol"])*config.yunbi_trust_level)
 
 def fetch_from_btc38():
+  global price, volume
   url="http://api.btc38.com/v1/ticker.php"
   availableAssets = [ "BTS" ]
   try :
@@ -122,6 +124,7 @@ def fetch_from_btc38():
     volume["CNY"][ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config.btc38_trust_level)
 
 def fetch_from_bter():
+  global price, volume
   try :
    url="http://data.bter.com/api/1/tickers"
    response = requests.get(url=url, headers=_request_headers, timeout=3 )
@@ -158,6 +161,7 @@ def fetch_from_bter():
    volume["CNY"][ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config.bter_trust_level)
 
 def fetch_from_poloniex():
+  global price, volume
   try:
    url="https://poloniex.com/public?command=returnTicker"
    response = requests.get(url=url, headers=_request_headers, timeout=3 )
@@ -196,6 +200,7 @@ def fetch_from_bittrex():
      volume["BTC"][ coinmap ].append(float(coin["Volume"])*float(coin["Last"])*config.bittrex_trust_level)
 
 def fetch_from_yahoo():
+  global price, volume
   try :
    for base in _yahoo_base :
     yahooAssets = ",".join([a+base+"=X" for a in _yahoo_quote])
@@ -290,14 +295,26 @@ def get_btsprice():
      volume["BTS"][quote].append(float("%.8g" % float(volume[base]["BTS"][idx]/ratio)))
 
  for asset in asset_list_publish :
+  #print("\nAsset: %s" % asset)
+  #for p in price["BTS"][asset] :
+  # print("%f," % p, end="")
+  #for v in volume["BTS"][asset] :
+  # print("%f," % v, end="")
+
   ### Median
-  #price_in_bts_average[asset] = statistics.median(price["BTS"][asset])
+  price_in_bts_weighted[asset] = statistics.median(price["BTS"][asset])
+
   ### Mean
-  #price_in_bts_average[asset] = statistics.mean(price["BTS"][asset])
+  #price_in_bts_weighted[asset] = statistics.mean(price["BTS"][asset])
+
   ### Weighted Mean
-  assetvolume= [b for b in  volume["BTS"][asset] ]
-  assetprice = [a for a in  price["BTS"][asset]  ]
-  price_in_bts_weighted[asset] = num.average(assetprice, weights=assetvolume)
+  #assetvolume= [v for v in  volume["BTS"][asset] ]
+  #assetprice = [p for p in  price["BTS"][asset]  ]
+  #if len(assetvolume) > 1 :
+  # price_in_bts_weighted[asset] = num.average(assetprice, weights=assetvolume)
+  #else :
+  # price_in_bts_weighted[asset] = assetprice[0]
+
   ### Discount
   price_in_bts_weighted[asset] = price_in_bts_weighted[asset] * config.discount
 
@@ -333,7 +350,7 @@ def print_stats() :
                1/weighted_external_price,
                1/mean_exchanges,
                1/median_exchanges,
-               price_from_blockchain,
+               1/price_from_blockchain,
                change_my,
                change_blockchain,
                age ])
@@ -359,10 +376,10 @@ if __name__ == "__main__":
  _yahoo_base  = ["USD","EUR","CNY","JPY","HKD"]
  _yahoo_quote = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD", "KRW"]
  _yahoo_indices = {
-                     "399106.SZ" : "CNY",  # SHENZHEN
-                     "^HSI"      : "HKD",  # HANGSENG
-                     "^IXIC"     : "USD",  # NASDAQC
-                     "^N225"     : "JPY"   # NIKKEI
+                     "399106.SZ" : "BTS",  #"CNY",  # SHENZHEN
+                     "^HSI"      : "BTS",  #"HKD",  # HANGSENG
+                     "^IXIC"     : "BTS",  #"USD",  # NASDAQC
+                     "^N225"     : "BTS"   #"JPY"   # NIKKEI
                  }
  _bts_yahoo_map = {
       "XAU"       : "GOLD",
@@ -374,7 +391,7 @@ if __name__ == "__main__":
       "^N225"     : "NIKKEI"
  }
  _request_headers = {'content-type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+                     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
  ## Call Parameters ###########################################################
  asset_list_publish = _all_bts_assets
  if len( sys.argv ) > 1 :
