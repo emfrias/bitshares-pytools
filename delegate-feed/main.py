@@ -202,6 +202,7 @@ def fetch_from_bittrex():
 def fetch_from_yahoo():
   global price, volume
   try :
+   # assets
    for base in _yahoo_base :
     yahooAssets = ",".join([a+base+"=X" for a in _yahoo_quote])
     url="http://download.finance.yahoo.com/d/quotes.csv"
@@ -220,7 +221,8 @@ def fetch_from_yahoo():
    yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(_yahoo_indices) :
     if float(yahooprices[i]) > 0 :
-     price[ list(_yahoo_indices.values())[i] ][ bts_yahoo_map(a) ].append(float(yahooprices[i]))
+     #price[ list(_yahoo_indices.values())[i] ][ bts_yahoo_map(a) ].append(float(yahooprices[i]))
+     price[ "BTS" ][ bts_yahoo_map(a) ].append(1/float(yahooprices[i]))
 
   except Exception as e:
     sys.exit("\nError fetching results from yahoo! {0}".format(str(e)))
@@ -284,15 +286,15 @@ def get_btsprice():
    if base == quote : continue
    for ratio in price[base][quote] :
     for idx in range(0, len(price[base]["BTS"])) :
-     price[quote]["BTS"].append( float("%.8g" % float(price[base]["BTS"][idx] /ratio)))
-     volume[quote]["BTS"].append(float("%.8g" % float(volume[base]["BTS"][idx]/ratio)))
+     price[quote]["BTS"].append( (float(price[base]["BTS"][idx] /ratio)))
+     volume[quote]["BTS"].append((float(volume[base]["BTS"][idx]/ratio)))
 
  for base in _bases :
   for quote in asset_list_publish :
    for ratio in price[ base ][ quote ] :
     for idx in range(0, len(price[base]["BTS"])) :
-     price["BTS"][quote].append( float("%.8g" % float(price[base]["BTS"][idx] /ratio)))
-     volume["BTS"][quote].append(float("%.8g" % float(volume[base]["BTS"][idx]/ratio)))
+     price["BTS"][quote].append( (float(price[base]["BTS"][idx] /ratio)))
+     volume["BTS"][quote].append((float(volume[base]["BTS"][idx]/ratio)))
 
  for asset in asset_list_publish :
   #print("\nAsset: %s" % asset)
