@@ -231,48 +231,91 @@ def fetch_from_yahoo():
 ## Fetch current feeds, assets and feeds of assets from wallet
 ## ----------------------------------------------------------------------------
 def fetch_from_wallet(rpc):
- ## Try to connect to delegate
+ ## Try to connect to wallet node
  rpc.info()
  ## asset definition - mainly for precision
  for asset in asset_list_publish :
-  result = rpc.blockchain_get_asset(asset)
-  assetprecision[asset] = float(result["result"]["precision"])
+  if config.network == 'graphene':
+   assert asset in config.assets_to_feed
+   result = rpc.get_asset(config.assets_to_feed[asset])
+   assetprecision[asset] = float(pow(10, result["result"]["precision"]))
+  else: # bitshares 0.x
+   result = rpc.blockchain_get_asset(asset)
+   assetprecision[asset] = float(result["result"]["precision"])
   ## feeds for asset
-  result = rpc.blockchain_get_feeds_for_asset(asset)
-  price_median_blockchain[asset] = 0.0
-  for feed in result["result"] :
-   if feed["delegate_name"] == "MARKET":
-    price_median_blockchain[asset] = float(feed["median_price"])
+  if config.network == "graphene":
+   result = rpc.get_bitasset_data(config.assets_to_feed[asset])
+   settlement_price_object = result["result"]["current_feed"]["settlement_price"]
+   if float(settlement_price_object["base"]["amount"]) != 0.0:
+    settlement_price = float(settlement_price_object["quote"]["amount"]) / float(settlement_price_object["base"]["amount"])
+    price_median_blockchain[asset] = settlement_price
+  else: # bitshares 0.x
+   result = rpc.blockchain_get_feeds_for_asset(asset)
+   price_median_blockchain[asset] = 0.0
+   for feed in result["result"] :
+    if feed["delegate_name"] == "MARKET":
+     price_median_blockchain[asset] = float(feed["median_price"])
   time.sleep(.1) # Give time for the wallet to do more important tasks!
  ## feed from delegates
- for delegate in config.delegate_list:
-  result = rpc.blockchain_get_feeds_from_delegate(delegate)
-  for f in result[ "result" ] :
-   myCurrentFeed[ f[ "asset_symbol" ] ] = float(f[ "price" ])
-   oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
-  time.sleep(.1) # Give time for the wallet to do more important tasks!
+ for feed_producer in config.feed_producer_list:
+  if config.network == "graphene":
+   feed_producer_account_id = rpc.get_account_id(feed_producer)["result"]
+   for producer, [published_time, price_feed] in result["result"]["feeds"]:
+     if producer == feed_producer_account_id:
+      pass #TODO
+  else: # bitshares 0.x
+   result = rpc.blockchain_get_feeds_from_delegate(feed_producer)
+   for f in result[ "result" ] :
+    myCurrentFeed[ f[ "asset_symbol" ] ] = float(f[ "price" ])
+    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
+   time.sleep(.1) # Give time for the wallet to do more important tasks!
 
 ## ----------------------------------------------------------------------------
 ## Send the new feeds!
 ## ----------------------------------------------------------------------------
 def update_feed(rpc,assets):
- wallet_was_unlocked = False
- 
  info = rpc.info()["result"]
- if not info["wallet_open"] :
-  print( "Opening wallet %s" % config.wallet )
-  ret = rpc.wallet_open(config.wallet)
+ if config.network == "graphene":
+  wallet_was_unlocked = not rpc.is_locked()["result"]
+ else:
+  wallet_was_unlocked = info["wallet_unlocked"]
+ 
+ if config.network != "graphene":
+  if not info["wallet_open"] :
+   print( "Opening wallet %s" % config.wallet )
+   ret = rpc.wallet_open(config.wallet)
 
- if not info["wallet_unlocked"] :
-  wallet_was_unlocked = True
+ if not wallet_was_unlocked:
   print( "Unlocking wallet" )
-  ret = rpc.unlock(999999, config.unlock)
+  if config.network == "graphene":
+   ret = rpc.call_rpc_method("unlock", config.unlock)
+  else:
+   ret = rpc.unlock(999999, config.unlock)
 
- for delegate in config.delegate_list:
-  print("publishing feeds for delegate: %s"%delegate)
-  result = rpc.wallet_publish_feeds(delegate, assets)
+ for feed_producer in config.feed_producer_list:
+  print("publishing feeds for producer: %s"%feed_producer)
+  if config.network == "graphene":
+   core_asset_object = rpc.get_asset("CORE")["result"]
+   for asset, price in assets:
+    # asset is the common symbol for the asset, price is the price of that asset in BTS
+    if asset in config.assets_to_feed:
+     asset_to_feed =  config.assets_to_feed[asset]
+     asset_to_feed_object = rpc.get_asset(asset_to_feed)["result"]
+     asset_to_feed_id = asset_to_feed_object["id"]
+     settlement_price = { "base":   { "amount": int(float(price) * float(pow(10, int(asset_to_feed_object["precision"])))), "asset_id": asset_to_feed_object["id"] },
+                          "quote":  { "amount": pow(10, int(core_asset_object["precision"])), "asset_id": core_asset_object["id"] } }
+     # core exchange rate is same as settlement price * coreExchangeRateMultiplier, but base & quote are reversed
+     core_exchange_rate = { "base":   { "amount": pow(10, int(core_asset_object["precision"])), "asset_id": core_asset_object["id"] },
+                            "quote":  { "amount": int(config.coreExchangeRateMultiplier * float(price) * float(pow(10, int(asset_to_feed_object["precision"])))), "asset_id": asset_to_feed_object["id"] } }
+     price_feed = { "settlement_price": settlement_price,
+                    "core_exchange_rate": core_exchange_rate,
+                    "maintenance_collateral_ratio": config.maintenanceCollateralRatio,
+                    "maximum_short_squeeze_ratio": config.maxShortSqueezeRatio }
+     rpc.publish_asset_feed(feed_producer, asset_to_feed, price_feed, True)
+  else:
+   result = rpc.wallet_publish_feeds(feed_producer, assets)
 
- if wallet_was_unlocked :
+ if not wallet_was_unlocked :
   print( "Relocking wallet" )
   rpc.lock()
 
@@ -352,7 +395,7 @@ def print_stats() :
                1/weighted_external_price,
                1/mean_exchanges,
                1/median_exchanges,
-               1/price_from_blockchain,
+               1/price_from_blockchain if price_from_blockchain else 0.0,
                change_my,
                change_blockchain,
                age ])
@@ -400,6 +443,11 @@ if __name__ == "__main__":
   if sys.argv[1] != "ALL":
    asset_list_publish = sys.argv
    asset_list_publish.pop(0)
+
+ if config.network == "graphene":
+  # only bother feeding assets we have mapped to a graphene asset
+  asset_list_publish = [i for i in asset_list_publish if i in config.assets_to_feed]
+  print("Producing price feeds for ", ", ".join(asset_list_publish))
 
  ## Initialization
  price_in_bts_weighted   = {}
@@ -461,7 +509,7 @@ if __name__ == "__main__":
  print_stats()
 
  ## Check publish rules and publich feeds #####################################
- if publish_rule() :
+ if True: #publish_rule() :
   print("Update required! Forcing now!")
   update_feed(rpc,asset_list_final)
  else :
